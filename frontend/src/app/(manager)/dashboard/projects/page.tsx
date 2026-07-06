@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from "react"
 import { useRouter } from "next/navigation"
+import Link from "next/link"
 import { useAuth } from "@/hooks/useAuth"
 import { api } from "@/lib/api"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -231,10 +232,10 @@ export default function ProjectsPage() {
           {projects.map((project) => (
             <Card key={project.id}>
               <CardHeader className="flex flex-row items-start justify-between space-y-0 pb-2">
-                <div className="flex items-center gap-2">
+                <Link href={`/dashboard/projects/${project.id}`} className="flex items-center gap-2 hover:underline">
                   <FolderKanban className="h-5 w-5 text-muted-foreground" />
                   <CardTitle className="text-lg">{project.name}</CardTitle>
-                </div>
+                </Link>
                 <div className="flex gap-1">
                   <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => openEdit(project)}>
                     <Edit2 className="h-4 w-4" />

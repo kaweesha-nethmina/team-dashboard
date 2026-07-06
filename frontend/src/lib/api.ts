@@ -51,6 +51,7 @@ export const api = {
   },
   projects: {
     getAll: () => request<any[]>("/projects"),
+    getById: (id: string) => request<any>(`/projects/${id}`),
     create: (data: { name: string; description?: string }) =>
       request<any>("/projects", { method: "POST", body: JSON.stringify(data) }),
     update: (id: string, data: any) =>

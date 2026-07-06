@@ -23,5 +23,6 @@ router.delete("/:id", authenticate, requireRole("MANAGER"), projectsController.d
 router.post("/:id/assign", authenticate, requireRole("MANAGER"), validate(assignUserSchema), projectsController.assignUser);
 router.delete("/:id/assign/:userId", authenticate, requireRole("MANAGER"), projectsController.removeUser);
 router.get("/:id/members", authenticate, projectsController.getMembers);
+router.get("/:id", authenticate, projectsController.getById);
 
 export default router;

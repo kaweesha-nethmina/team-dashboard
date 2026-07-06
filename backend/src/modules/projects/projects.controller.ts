@@ -58,6 +58,15 @@ export class ProjectsController {
     }
   }
 
+  async getById(req: Request, res: Response): Promise<void> {
+    try {
+      const project = await projectsService.getById(req.params.id);
+      res.json(project);
+    } catch (error: unknown) {
+      res.status(404).json({ error: error instanceof Error ? error.message : "Project not found" });
+    }
+  }
+
   async getMembers(req: Request, res: Response): Promise<void> {
     try {
       const members = await projectsService.getProjectMembers(req.params.id);

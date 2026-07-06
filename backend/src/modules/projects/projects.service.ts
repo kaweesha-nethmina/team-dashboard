@@ -61,6 +61,18 @@ export class ProjectsService {
     return { message: "User removed from project" };
   }
 
+  async getById(id: string) {
+    const project = await prisma.project.findUnique({
+      where: { id },
+      include: {
+        createdBy: { select: { id: true, name: true } },
+        _count: { select: { reports: true } },
+      },
+    });
+    if (!project) throw new Error("Project not found");
+    return project;
+  }
+
   async getProjectMembers(projectId: string) {
     const assignments = await prisma.projectAssignment.findMany({
       where: { projectId },
