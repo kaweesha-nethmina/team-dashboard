@@ -44,6 +44,22 @@ export class AuthService {
     return user;
   }
 
+  async getMembers(search?: string) {
+    const where: any = { role: "MEMBER" };
+    if (search) {
+      where.OR = [
+        { name: { ilike: `%${search}%` } },
+        { email: { ilike: `%${search}%` } },
+      ];
+    }
+    return prisma.user.findMany({
+      where,
+      select: { id: true, name: true, email: true },
+      orderBy: { name: "asc" },
+      take: 20,
+    });
+  }
+
   private generateToken(userId: string, email: string, role: string): string {
     const payload: JwtPayload = { userId, email, role };
     return jwt.sign(payload, env.jwtSecret, { expiresIn: env.jwtExpiresIn as any });

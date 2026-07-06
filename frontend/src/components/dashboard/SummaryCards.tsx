@@ -6,9 +6,9 @@ import type { DashboardSummary } from "@/types"
 
 const cards = [
   { key: "submittedReports" as const, label: "Submitted Reports", icon: FileText, color: "text-green-600", bg: "bg-green-100" },
-  { key: "complianceRate" as const, label: "Compliance Rate", icon: TrendingUp, suffix: "%", color: "text-blue-600", bg: "bg-blue-100" },
-  { key: "openBlockers" as const, label: "Open Blockers", icon: AlertTriangle, color: "text-red-600", bg: "bg-red-100" },
-  { key: "totalMembers" as const, label: "Team Members", icon: Users, color: "text-purple-600", bg: "bg-purple-100" },
+  { key: "complianceRate" as const, label: "Compliance Rate", icon: TrendingUp, suffix: "%", color: "text-indigo-600", bg: "bg-indigo-50" },
+  { key: "openBlockers" as const, label: "Open Blockers", icon: AlertTriangle, color: "text-red-600", bg: "bg-red-50" },
+  { key: "totalMembers" as const, label: "Team Members", icon: Users, color: "text-violet-600", bg: "bg-violet-50" },
 ]
 
 export function SummaryCards({ data }: { data: DashboardSummary }) {

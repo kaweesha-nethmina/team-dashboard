@@ -1,11 +1,15 @@
 import prisma from "../../config/prisma";
 
 export class ReportsService {
-  async getMyReports(userId: string) {
+  async getMyReports(userId: string, page?: number, limit?: number) {
+    const take = limit || 50;
+    const skip = page && page > 1 ? (page - 1) * take : 0;
     return prisma.report.findMany({
       where: { userId },
       include: { project: { select: { id: true, name: true } } },
       orderBy: { weekStartDate: "desc" },
+      take,
+      skip,
     });
   }
 
@@ -71,6 +75,8 @@ export class ReportsService {
     status?: string;
     startDate?: string;
     endDate?: string;
+    page?: number;
+    limit?: number;
   }) {
     const where: any = {};
 
@@ -80,6 +86,9 @@ export class ReportsService {
     if (filters.startDate) where.weekStartDate = { ...where.weekStartDate, gte: new Date(filters.startDate) };
     if (filters.endDate) where.weekEndDate = { ...where.weekEndDate, lte: new Date(filters.endDate) };
 
+    const take = filters.limit || 50;
+    const skip = filters.page && filters.page > 1 ? (filters.page - 1) * take : 0;
+
     return prisma.report.findMany({
       where,
       include: {
@@ -87,6 +96,8 @@ export class ReportsService {
         user: { select: { id: true, name: true, email: true } },
       },
       orderBy: { weekStartDate: "desc" },
+      take,
+      skip,
     });
   }
 

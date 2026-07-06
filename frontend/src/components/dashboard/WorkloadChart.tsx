@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { PieChart, Pie, Cell, Tooltip, Legend, ResponsiveContainer } from "recharts"
 import type { Workload } from "@/types"
 
-const COLORS = ["#3b82f6", "#22c55e", "#eab308", "#ef4444", "#a855f7", "#ec4899"]
+const COLORS = ["#4f46e5", "#22c55e", "#eab308", "#ef4444", "#a855f7", "#ec4899"]
 
 export function WorkloadChart({ data }: { data: Workload[] }) {
   return (

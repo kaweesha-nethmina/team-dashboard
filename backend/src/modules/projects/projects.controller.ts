@@ -41,8 +41,8 @@ export class ProjectsController {
 
   async assignUser(req: Request, res: Response): Promise<void> {
     try {
-      const { userId } = req.body;
-      const assignment = await projectsService.assignUser(req.params.id, userId);
+      const { email } = req.body;
+      const assignment = await projectsService.assignUserByEmail(req.params.id, email);
       res.status(201).json(assignment);
     } catch (error: unknown) {
       res.status(400).json({ error: error instanceof Error ? error.message : "Failed to assign user" });
@@ -55,6 +55,15 @@ export class ProjectsController {
       res.json(result);
     } catch (error: unknown) {
       res.status(400).json({ error: error instanceof Error ? error.message : "Failed to remove user" });
+    }
+  }
+
+  async getById(req: Request, res: Response): Promise<void> {
+    try {
+      const project = await projectsService.getById(req.params.id);
+      res.json(project);
+    } catch (error: unknown) {
+      res.status(404).json({ error: error instanceof Error ? error.message : "Project not found" });
     }
   }
 

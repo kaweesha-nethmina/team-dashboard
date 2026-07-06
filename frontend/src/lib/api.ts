@@ -25,6 +25,8 @@ async function request<T>(endpoint: string, options: RequestInit = {}): Promise<
 
 export const api = {
   auth: {
+    members: (search?: string) =>
+      request<any[]>(`/auth/members${search ? `?search=${encodeURIComponent(search)}` : ""}`),
     register: (data: { name: string; email: string; password: string; role?: string }) =>
       request<any>("/auth/register", { method: "POST", body: JSON.stringify(data) }),
     login: (data: { email: string; password: string }) =>
@@ -49,14 +51,15 @@ export const api = {
   },
   projects: {
     getAll: () => request<any[]>("/projects"),
+    getById: (id: string) => request<any>(`/projects/${id}`),
     create: (data: { name: string; description?: string }) =>
       request<any>("/projects", { method: "POST", body: JSON.stringify(data) }),
     update: (id: string, data: any) =>
       request<any>(`/projects/${id}`, { method: "PUT", body: JSON.stringify(data) }),
     delete: (id: string) =>
       request<any>(`/projects/${id}`, { method: "DELETE" }),
-    assignUser: (projectId: string, userId: string) =>
-      request<any>(`/projects/${projectId}/assign`, { method: "POST", body: JSON.stringify({ userId }) }),
+    assignUser: (projectId: string, email: string) =>
+      request<any>(`/projects/${projectId}/assign`, { method: "POST", body: JSON.stringify({ email }) }),
     removeUser: (projectId: string, userId: string) =>
       request<any>(`/projects/${projectId}/assign/${userId}`, { method: "DELETE" }),
     getMembers: (projectId: string) => request<any[]>(`/projects/${projectId}/members`),

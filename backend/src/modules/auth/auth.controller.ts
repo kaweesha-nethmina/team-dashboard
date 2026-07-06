@@ -51,6 +51,16 @@ export class AuthController {
       res.status(404).json({ error: error instanceof Error ? error.message : "User not found" });
     }
   }
+
+  async members(req: Request, res: Response): Promise<void> {
+    try {
+      const search = req.query.search as string | undefined;
+      const users = await authService.getMembers(search);
+      res.json(users);
+    } catch (error: unknown) {
+      res.status(500).json({ error: error instanceof Error ? error.message : "Failed to load members" });
+    }
+  }
 }
 
 export const authController = new AuthController();

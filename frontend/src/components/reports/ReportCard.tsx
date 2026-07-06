@@ -4,6 +4,7 @@ import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { api } from "@/lib/api"
+import Link from "next/link"
 import { useRouter } from "next/navigation"
 import type { Report } from "@/types"
 
@@ -56,6 +57,9 @@ export function ReportCard({ report, onUpdate }: { report: Report; onUpdate?: ()
         {report.status === "DRAFT" && (
           <div className="flex gap-2 pt-2">
             <Button size="sm" onClick={handleSubmit}>Submit</Button>
+            <Link href={`/my-reports/${report.id}/edit`}>
+              <Button size="sm" variant="outline">Edit</Button>
+            </Link>
           </div>
         )}
       </CardContent>
