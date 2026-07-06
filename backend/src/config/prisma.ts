@@ -1,220 +1,282 @@
-import bcrypt from "bcryptjs";
+import { createClient } from "@supabase/supabase-js";
 
-function uuid(): string {
-  return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, (c) => {
-    const r = (Math.random() * 16) | 0;
-    return (c === "x" ? r : (r & 0x3) | 0x8).toString(16);
-  });
+const supabaseUrl = process.env.SUPABASE_URL || "";
+const supabaseKey = process.env.SUPABASE_SECRET_KEY || "";
+const supabase = createClient(supabaseUrl, supabaseKey);
+
+if (!supabaseUrl || !supabaseKey) {
+  console.warn("Supabase credentials missing — some features may not work");
 }
 
-interface Store {
-  user: Map<string, any>;
-  report: Map<string, any>;
-  project: Map<string, any>;
-  projectAssignment: Map<string, any>;
-}
-
-const store: Store = {
-  user: new Map(),
-  report: new Map(),
-  project: new Map(),
-  projectAssignment: new Map(),
+const TABLE: Record<string, string> = {
+  user: "users",
+  report: "reports",
+  project: "projects",
+  projectAssignment: "project_assignments",
 };
 
-function toArray(map: Map<string, any>): any[] {
-  return Array.from(map.values());
+function tn(m: string): string {
+  return TABLE[m] || m;
 }
 
-function matchWhere(record: any, where: any): boolean {
-  if (!where || Object.keys(where).length === 0) return true;
+function q(col: string): string {
+  return `"${col}"`;
+}
+
+function qcols(fields: string[]): string {
+  return fields.length ? fields.map(q).join(",") : "*";
+}
+
+function qlist(col: string): string {
+  return q(col);
+}
+
+async function resolveRelations(records: any[], include: any): Promise<any[]> {
+  if (!include || records.length === 0) return records;
+
+  const tasks: Promise<void>[] = [];
+
+  for (const relKey of Object.keys(include)) {
+    if (relKey === "_count") continue;
+    const sel = include[relKey].select || null;
+
+    if (relKey === "project") {
+      const ids = [...new Set(records.map((r: any) => r.projectId).filter(Boolean))];
+      if (ids.length > 0) {
+        tasks.push(
+          (async () => {
+            const c = sel ? qcols(Object.keys(sel).filter((k) => sel[k] === true)) : "*";
+            const { data } = await supabase.from("projects").select(c).in(q("id"), ids);
+            const m = new Map((data || []).map((p: any) => [p.id, p]));
+            for (const r of records) r.project = m.get(r.projectId) || null;
+          })()
+        );
+      }
+    }
+
+    if (relKey === "user") {
+      const ids = [...new Set(records.map((r: any) => r.userId).filter(Boolean))];
+      if (ids.length > 0) {
+        tasks.push(
+          (async () => {
+            const c = sel ? qcols(Object.keys(sel).filter((k) => sel[k] === true)) : "*";
+            const { data } = await supabase.from("users").select(c).in(q("id"), ids);
+            const m = new Map((data || []).map((u: any) => [u.id, u]));
+            for (const r of records) r.user = m.get(r.userId) || null;
+          })()
+        );
+      }
+    }
+
+    if (relKey === "createdBy") {
+      const ids = [...new Set(records.map((r: any) => r.createdById).filter(Boolean))];
+      if (ids.length > 0) {
+        tasks.push(
+          (async () => {
+            const c = sel ? qcols(Object.keys(sel).filter((k) => sel[k] === true)) : "*";
+            const { data } = await supabase.from("users").select(c).in(q("id"), ids);
+            const m = new Map((data || []).map((u: any) => [u.id, u]));
+            for (const r of records) r.createdBy = m.get(r.createdById) || null;
+          })()
+        );
+      }
+    }
+
+    if (relKey === "reports") {
+      const ids = [...new Set(records.map((r: any) => r.id).filter(Boolean))];
+      if (ids.length > 0) {
+        tasks.push(
+          (async () => {
+            let query = supabase.from("reports").select("*");
+            if (include[relKey].orderBy) {
+              const ok = Object.keys(include[relKey].orderBy)[0];
+              const od = include[relKey].orderBy[ok];
+              query = query.order(q(ok), { ascending: od === "asc" });
+            }
+            const { data: relReports } = await query;
+            if (include[relKey].take && relReports) {
+              const grouped = new Map<string, any[]>();
+              for (const rr of relReports) {
+                const list = grouped.get(rr.userId) || [];
+                if (list.length < include[relKey].take) list.push(rr);
+                grouped.set(rr.userId, list);
+              }
+              for (const r of records) r.reports = grouped.get(r.id) || [];
+            } else {
+              for (const r of records)
+                r.reports = (relReports || []).filter(
+                  (rr: any) => rr.userId === r.id || rr.projectId === r.id
+                );
+            }
+          })()
+        );
+      }
+    }
+
+    if (relKey === "assignments") {
+      const ids = [...new Set(records.map((r: any) => r.id).filter(Boolean))];
+      if (ids.length > 0) {
+        tasks.push(
+          (async () => {
+            const { data } = await supabase.from("project_assignments").select("*");
+            for (const r of records)
+              r.assignments = (data || []).filter(
+                (a: any) => a.userId === r.id || a.projectId === r.id
+              );
+          })()
+        );
+      }
+    }
+  }
+
+  await Promise.all(tasks);
+
+  for (const relKey of Object.keys(include)) {
+    const val = include[relKey];
+    if (relKey === "_count" && val.select) {
+      for (const r of records) {
+        r._count = r._count || {};
+        for (const ck of Object.keys(val.select)) {
+          const arr = r[ck === "reports" ? "reports" : ck];
+          r._count[ck] = Array.isArray(arr) ? arr.length : 0;
+        }
+      }
+    }
+  }
+
+  return records;
+}
+
+function buildSelect(table: string, select?: any): string {
+  if (!select) return "*";
+  const fields = Object.keys(select).filter((k) => select[k] === true);
+  return fields.length ? fields.map(q).join(",") : "*";
+}
+
+function applyQuery(table: string, query: any, where: any) {
+  if (!where) return query;
   for (const key of Object.keys(where)) {
     const val = where[key];
+    const c = q(key);
     if (val && typeof val === "object" && !Array.isArray(val)) {
-      const ops = val as Record<string, any>;
-      if (ops.not !== undefined && record[key] === ops.not) return false;
-      if (ops.gte !== undefined && record[key] < ops.gte) return false;
-      if (ops.lte !== undefined && record[key] > ops.lte) return false;
-      if (ops.gt !== undefined && record[key] <= ops.gt) return false;
-      if (ops.lt !== undefined && record[key] >= ops.lt) return false;
-      if (ops.in !== undefined && !ops.in.includes(record[key])) return false;
-      if (ops.contains !== undefined && !record[key]?.includes(ops.contains)) return false;
-      if (ops.startsWith !== undefined && !record[key]?.startsWith(ops.startsWith)) return false;
-      if (ops.endsWith !== undefined && !record[key]?.endsWith(ops.endsWith)) return false;
-    } else if (record[key] !== val) {
-      return false;
-    }
-  }
-  return true;
-}
-
-function orderResults(results: any[], orderBy: any): any[] {
-  if (!orderBy) return results;
-  const key = Object.keys(orderBy)[0];
-  const dir = orderBy[key];
-  return [...results].sort((a, b) => {
-    if (dir === "asc") return a[key] > b[key] ? 1 : -1;
-    return a[key] < b[key] ? 1 : -1;
-  });
-}
-
-function applySelect(record: any, select: any, relations: Record<string, any[]>): any {
-  if (!select) return record;
-  const result: any = {};
-  for (const key of Object.keys(select)) {
-    const val = select[key];
-    if (val === true) {
-      result[key] = record[key];
-    } else if (typeof val === "object") {
-      if (val.select || val.where || val.orderBy || val.take) {
-        const relData = relations[key] || [];
-        let filtered = relData.filter((r: any) => matchWhere(r, val.where || {}));
-        filtered = orderResults(filtered, val.orderBy);
-        if (val.take) filtered = filtered.slice(0, val.take);
-        result[key] = filtered.map((r: any) => applySelect(r, val.select, {}));
-      } else {
-        result[key] = applySelect(record[key], val, {});
-      }
-    }
-  }
-  return result;
-}
-
-function resolveIncludes(record: any, include: any): any {
-  if (!include) return record;
-  const result = { ...record };
-  for (const key of Object.keys(include)) {
-    const val = include[key];
-
-    if (key === "_count") {
-      if (val.select) {
-        result._count = {};
-        for (const countKey of Object.keys(val.select)) {
-          const relName = countKey === "reports" ? "report" : countKey;
-          const relStore = (store as any)[relName === "reports" ? "report" : relName];
-          if (relStore) {
-            const fk = relName === "report" ? "projectId" : "projectId";
-            result._count[countKey] = toArray(relStore).filter(
-              (r: any) => r[fk] === record.id || r.userId === record.id
-            ).length;
-          }
-        }
-      }
-      continue;
-    }
-
-    const select = val.select || null;
-    let related: any[] = [];
-
-    if (key === "project") {
-      related = toArray(store.project).filter((p) => p.id === record.projectId);
-    } else if (key === "user") {
-      related = toArray(store.user).filter((u) => u.id === record.userId || u.id === record.createdById);
-    } else if (key === "createdBy") {
-      related = toArray(store.user).filter((u) => u.id === record.createdById);
-    } else if (key === "reports") {
-      related = toArray(store.report).filter((r) => r.projectId === record.id || r.userId === record.id);
-      if (val.where) related = related.filter((r) => matchWhere(r, val.where));
-      if (val.orderBy) related = orderResults(related, val.orderBy);
-      if (val.take) related = related.slice(0, val.take);
-    } else if (key === "assignments") {
-      related = toArray(store.projectAssignment).filter((a) => a.projectId === record.id || a.userId === record.id);
-    }
-
-    if (select) {
-      const resolved = related.map((r) => {
-        if (key === "user" || key === "createdBy") {
-          return applySelect(r, select, {});
-        }
-        if (key === "project") {
-          return applySelect(r, select, {});
-        }
-        return applySelect(r, select, {});
-      });
-      result[key] = resolved.length === 1 ? resolved[0] : resolved;
+      if (val.not !== undefined) query = query.neq(c, val.not);
+      if (val.gte !== undefined) query = query.gte(c, val.gte instanceof Date ? val.gte.toISOString() : val.gte);
+      if (val.lte !== undefined) query = query.lte(c, val.lte instanceof Date ? val.lte.toISOString() : val.lte);
+      if (val.in !== undefined) query = query.in(c, val.in);
     } else {
-      result[key] = related.length === 1 ? related[0] : related;
+      query = query.eq(c, val);
     }
   }
-  return result;
+  return query;
 }
 
-function createModel(name: keyof Store) {
-  const table = store[name];
+function createModel(model: string) {
+  const table = tn(model);
+
   return {
-    findUnique: (args: any) => {
-      const key = Object.keys(args.where)[0];
-      const val = args.where[key];
-      const record = toArray(table).find((r: any) => r[key] === val);
-      if (!record) return Promise.resolve(null);
-      if (args.include) return Promise.resolve(resolveIncludes(record, args.include));
-      if (args.select) return Promise.resolve(applySelect(record, args.select, {}));
-      return Promise.resolve(record);
-    },
-    findMany: (args: any = {}) => {
-      let results = toArray(table).filter((r: any) => matchWhere(r, args.where || {}));
-      results = orderResults(results, args.orderBy);
-
-      if (args.include || args.select) {
-        results = results.map((r: any) => {
-          let resolved = r;
-          if (args.include) resolved = resolveIncludes(r, args.include);
-          if (args.select) {
-            const relKeys = Object.keys(args.select).filter((k: string) => typeof args.select[k] === "object");
-            const relData: Record<string, any[]> = {};
-            for (const rk of relKeys) {
-              if (rk === "reports") {
-                relData[rk] = toArray(store.report).filter((rep: any) => rep.userId === r.id);
-              } else if (rk === "assignments") {
-                relData[rk] = toArray(store.projectAssignment).filter((a: any) => a.userId === r.id);
-              }
-            }
-            resolved = applySelect(resolved, args.select, relData);
-          }
-          return resolved;
-        });
+    findUnique: async (args: any): Promise<any> => {
+      if (!supabaseUrl) return null;
+      try {
+        const key = q(Object.keys(args.where)[0]);
+        const val = args.where[Object.keys(args.where)[0]];
+        const cols = args.select ? buildSelect(table, args.select) : "*";
+        const { data, error } = await supabase.from(table).select(cols).eq(key, val).single();
+        if (error || !data) return null;
+        let result = data;
+        if (args.include) result = (await resolveRelations([result], args.include))[0];
+        return result;
+      } catch {
+        return null;
       }
+    },
 
-      if (args.take) results = results.slice(0, args.take);
-      return Promise.resolve(results);
+    findMany: async (args: any = {}): Promise<any[]> => {
+      if (!supabaseUrl) return [];
+      try {
+        const cols = args.select ? buildSelect(table, args.select) : "*";
+        let query = supabase.from(table).select(cols);
+        query = applyQuery(table, query, args.where);
+        if (args.orderBy) {
+          const ok = q(Object.keys(args.orderBy)[0]);
+          const od = args.orderBy[Object.keys(args.orderBy)[0]];
+          query = query.order(ok, { ascending: od === "asc" });
+        }
+        if (args.take) query = query.limit(args.take);
+        const { data, error } = await query;
+        if (error || !data) return [];
+        let results = data;
+        if (args.include) results = await resolveRelations(results, args.include);
+        return results;
+      } catch {
+        return [];
+      }
     },
-    findFirst: (args: any = {}) => {
-      let results = toArray(table).filter((r: any) => matchWhere(r, args.where || {}));
-      results = orderResults(results, args.orderBy);
-      return Promise.resolve(results[0] || null);
+
+    count: async (args: any = {}): Promise<number> => {
+      if (!supabaseUrl) return 0;
+      try {
+        let query = supabase.from(table).select("*", { count: "exact", head: true });
+        query = applyQuery(table, query, args.where);
+        const { count, error } = await query;
+        return error ? 0 : count || 0;
+      } catch {
+        return 0;
+      }
     },
-    count: (args: any = {}) => {
-      return Promise.resolve(toArray(table).filter((r: any) => matchWhere(r, args.where || {})).length);
+
+    create: async (args: any = {}): Promise<any> => {
+      if (!supabaseUrl) return null;
+      try {
+        const now = new Date();
+        const insertData = { ...args.data, createdAt: now, updatedAt: now };
+        const { data, error } = await supabase.from(table).insert([insertData]).select("*").single();
+        if (error || !data) throw new Error(error?.message || "Create failed");
+        let result = data;
+        if (args.include) result = (await resolveRelations([result], args.include))[0];
+        return result;
+      } catch (err: unknown) {
+        throw new Error(err instanceof Error ? err.message : "Create failed");
+      }
     },
-    create: (args: any = {}) => {
-      const now = new Date();
-      const record = { id: uuid(), ...args.data, createdAt: now, updatedAt: now };
-      table.set(record.id, record);
-      let result = record;
-      if (args.include) result = resolveIncludes(record, args.include);
-      return Promise.resolve(result);
+
+    update: async (args: any = {}): Promise<any> => {
+      if (!supabaseUrl) return null;
+      try {
+        const key = q(Object.keys(args.where)[0]);
+        const val = args.where[Object.keys(args.where)[0]];
+        const updateData = { ...args.data, updatedAt: new Date() };
+        const { data, error } = await supabase.from(table).update(updateData).eq(key, val).select("*").single();
+        if (error || !data) throw new Error(error?.message || "Update failed");
+        let result = data;
+        if (args.include) result = (await resolveRelations([result], args.include))[0];
+        return result;
+      } catch (err: unknown) {
+        throw new Error(err instanceof Error ? err.message : "Update failed");
+      }
     },
-    update: (args: any = {}) => {
-      const key = Object.keys(args.where)[0];
-      const val = args.where[key];
-      const existing = toArray(table).find((r: any) => r[key] === val);
-      if (!existing) return Promise.resolve(null);
-      const updated = { ...existing, ...args.data, updatedAt: new Date() };
-      table.set(updated.id, updated);
-      let result = updated;
-      if (args.include) result = resolveIncludes(updated, args.include);
-      return Promise.resolve(result);
+
+    delete: async (args: any = {}): Promise<any> => {
+      if (!supabaseUrl) return null;
+      try {
+        const key = q(Object.keys(args.where)[0]);
+        const val = args.where[Object.keys(args.where)[0]];
+        const { data, error } = await supabase.from(table).delete().eq(key, val).select("*").single();
+        return error ? null : data;
+      } catch {
+        return null;
+      }
     },
-    delete: (args: any = {}) => {
-      const key = Object.keys(args.where)[0];
-      const val = args.where[key];
-      const existing = toArray(table).find((r: any) => r[key] === val);
-      if (existing) table.delete(existing.id);
-      return Promise.resolve(existing || null);
-    },
-    deleteMany: (args: any = {}) => {
-      const toDelete = toArray(table).filter((r: any) => matchWhere(r, args.where || {}));
-      toDelete.forEach((r: any) => table.delete(r.id));
-      return Promise.resolve({ count: toDelete.length });
+
+    deleteMany: async (args: any = {}): Promise<any> => {
+      if (!supabaseUrl) return { count: 0 };
+      try {
+        let query = supabase.from(table).delete();
+        query = applyQuery(table, query, args.where);
+        const { error } = await query;
+        return { count: error ? 0 : 1 };
+      } catch {
+        return { count: 0 };
+      }
     },
   };
 }
@@ -226,59 +288,5 @@ const prisma = {
   projectAssignment: createModel("projectAssignment"),
   $disconnect: async () => {},
 };
-
-let initialized = false;
-
-async function seed() {
-  if (initialized) return;
-  initialized = true;
-
-  const hash = await bcrypt.hash("password123", 12);
-
-  const defaultManagerId = uuid();
-  store.user.set(defaultManagerId, {
-    id: defaultManagerId,
-    name: "Manager User",
-    email: "manager@teamdash.com",
-    passwordHash: hash,
-    role: "MANAGER",
-    createdAt: new Date(),
-    updatedAt: new Date(),
-  });
-
-  const defaultMemberId = uuid();
-  store.user.set(defaultMemberId, {
-    id: defaultMemberId,
-    name: "Member User",
-    email: "member@teamdash.com",
-    passwordHash: hash,
-    role: "MEMBER",
-    createdAt: new Date(),
-    updatedAt: new Date(),
-  });
-
-  const defaultProjectId = uuid();
-  store.project.set(defaultProjectId, {
-    id: defaultProjectId,
-    name: "Default Project",
-    description: "Sample project for testing",
-    createdById: defaultManagerId,
-    createdAt: new Date(),
-    updatedAt: new Date(),
-  });
-
-  store.projectAssignment.set(uuid(), {
-    id: uuid(),
-    userId: defaultMemberId,
-    projectId: defaultProjectId,
-    createdAt: new Date(),
-  });
-
-  console.log("In-memory store seeded with default data");
-  console.log(`  Manager: manager@teamdash.com / password123`);
-  console.log(`  Member:  member@teamdash.com / password123`);
-}
-
-seed();
 
 export default prisma;

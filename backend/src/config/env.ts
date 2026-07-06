@@ -11,4 +11,6 @@ export const env = {
   frontendUrl: process.env.FRONTEND_URL || "http://localhost:3000",
   anthropicApiKey: process.env.ANTHROPIC_API_KEY || "",
   databaseUrl: process.env.DATABASE_URL || "",
+  supabaseUrl: process.env.SUPABASE_URL || "",
+  supabaseSecretKey: process.env.SUPABASE_SECRET_KEY || "",
 };
