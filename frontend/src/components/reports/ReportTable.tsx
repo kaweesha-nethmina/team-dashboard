@@ -1,22 +1,16 @@
 "use client"
 
 import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
-import { api } from "@/lib/api"
-import { useRouter } from "next/navigation"
 import type { Report } from "@/types"
 
 const statusVariant: Record<string, "success" | "warning" | "secondary" | "destructive" | "outline"> = {
   SUBMITTED: "success", DRAFT: "warning", LATE: "destructive",
 }
 
-export function ReportTable({ reports, showUser = false, onUpdate }: {
+export function ReportTable({ reports, showUser = false }: {
   reports: Report[]
   showUser?: boolean
-  onUpdate?: () => void
 }) {
-  const router = useRouter()
-
   return (
     <div className="overflow-x-auto">
       <table className="w-full text-sm">

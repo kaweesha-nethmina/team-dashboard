@@ -12,6 +12,7 @@ import type { Project } from "@/types"
 
 export function ReportForm({ projects, initialData, onSuccess }: {
   projects: Project[]
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   initialData?: any
   onSuccess?: () => void
 }) {
