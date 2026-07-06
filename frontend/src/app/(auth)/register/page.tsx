@@ -64,7 +64,7 @@ export default function RegisterPage() {
               Welcome Back!
             </h2>
             <p className="text-white/80 text-sm mb-8 max-w-xs mx-auto leading-relaxed">
-              To keep connected with us please login with your personal info.
+              Already part of a team? Log in to view your reports and dashboard.
             </p>
             <Link
               href="/login"
