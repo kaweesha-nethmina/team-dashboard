@@ -56,10 +56,10 @@ export class DashboardService {
       },
     });
 
-    return projects.map((p) => ({
+    return projects.map((p: any) => ({
       projectId: p.id, projectName: p.name,
       reportCount: p._count.reports,
-      totalHours: p.reports.reduce((sum, r) => sum + (r.hoursWorked || 0), 0),
+      totalHours: p.reports.reduce((sum: number, r: any) => sum + (r.hoursWorked || 0), 0),
     }));
   }
 
@@ -72,12 +72,12 @@ export class DashboardService {
       },
     });
 
-    return users.map((u) => ({
+    return users.map((u: any) => ({
       userId: u.id, name: u.name, email: u.email,
       totalReports: u.reports.length,
-      submitted: u.reports.filter((r) => r.status === "SUBMITTED").length,
-      draft: u.reports.filter((r) => r.status === "DRAFT").length,
-      late: u.reports.filter((r) => r.status === "LATE").length,
+      submitted: u.reports.filter((r: any) => r.status === "SUBMITTED").length,
+      draft: u.reports.filter((r: any) => r.status === "DRAFT").length,
+      late: u.reports.filter((r: any) => r.status === "LATE").length,
     }));
   }
 
@@ -102,9 +102,9 @@ export class DashboardService {
       },
     });
 
-    return projects.map((p) => ({
+    return projects.map((p: any) => ({
       projectId: p.id, projectName: p.name,
-      taskCount: p.reports.filter((r) => r.tasksCompleted && r.tasksCompleted.trim().length > 0).length,
+      taskCount: p.reports.filter((r: any) => r.tasksCompleted && r.tasksCompleted.trim().length > 0).length,
     }));
   }
 }
