@@ -157,7 +157,7 @@ export default function ProjectsPage() {
   const selectAssignMember = (member: User) => {
     setSelectedAssignMember(member)
     setAssignSearch(`${member.name} (${member.email})`)
-    setAssignUserId(member.id)
+    setAssignUserId(member.email)
     setShowAssignSuggestions(false)
   }
 

@@ -57,8 +57,8 @@ export const api = {
       request<any>(`/projects/${id}`, { method: "PUT", body: JSON.stringify(data) }),
     delete: (id: string) =>
       request<any>(`/projects/${id}`, { method: "DELETE" }),
-    assignUser: (projectId: string, userId: string) =>
-      request<any>(`/projects/${projectId}/assign`, { method: "POST", body: JSON.stringify({ userId }) }),
+    assignUser: (projectId: string, email: string) =>
+      request<any>(`/projects/${projectId}/assign`, { method: "POST", body: JSON.stringify({ email }) }),
     removeUser: (projectId: string, userId: string) =>
       request<any>(`/projects/${projectId}/assign/${userId}`, { method: "DELETE" }),
     getMembers: (projectId: string) => request<any[]>(`/projects/${projectId}/members`),

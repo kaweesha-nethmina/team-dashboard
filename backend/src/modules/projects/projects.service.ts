@@ -39,9 +39,17 @@ export class ProjectsService {
     return { message: "Project deleted successfully" };
   }
 
-  async assignUser(projectId: string, userId: string) {
+  async assignUserByEmail(projectId: string, email: string) {
+    const user = await prisma.user.findUnique({ where: { email } });
+    if (!user) throw new Error("User not found with that email");
+
+    const existing = await prisma.projectAssignment.findMany({
+      where: { projectId, userId: user.id },
+    });
+    if (existing.length > 0) throw new Error("User is already assigned to this project");
+
     return prisma.projectAssignment.create({
-      data: { projectId, userId },
+      data: { projectId, userId: user.id },
       include: { user: { select: { id: true, name: true, email: true } } },
     });
   }

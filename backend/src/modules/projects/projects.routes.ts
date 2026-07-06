@@ -13,7 +13,7 @@ const createProjectSchema = z.object({
 });
 
 const assignUserSchema = z.object({
-  userId: z.string().uuid("Invalid user ID"),
+  email: z.string().email("Invalid email address"),
 });
 
 router.get("/", authenticate, projectsController.getAll);

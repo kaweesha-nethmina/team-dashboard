@@ -245,17 +245,21 @@ function createModel(model: string) {
 
     create: async (args: any = {}): Promise<any> => {
       if (!supabaseUrl) return null;
-      try {
-        const now = new Date();
-        const insertData = { ...args.data, createdAt: now, updatedAt: now };
-        const { data, error } = await supabase.from(table).insert([insertData]).select("*").single();
-        if (error || !data) throw new Error(error?.message || "Create failed");
-        let result = data;
+      const now = new Date();
+      const insertData = { ...args.data, createdAt: now, updatedAt: now };
+      const { data, error } = await supabase.from(table).insert([insertData]).select("*").single();
+      if (error) {
+        const retryData = { ...args.data, createdAt: now };
+        const { data: data2, error: error2 } = await supabase.from(table).insert([retryData]).select("*").single();
+        if (error2 || !data2) throw new Error(error2?.message || "Create failed");
+        let result = data2;
         if (args.include) result = (await resolveRelations([result], args.include))[0];
         return result;
-      } catch (err: unknown) {
-        throw new Error(err instanceof Error ? err.message : "Create failed");
       }
+      if (!data) throw new Error("Create failed");
+      let result = data;
+      if (args.include) result = (await resolveRelations([result], args.include))[0];
+      return result;
     },
 
     update: async (args: any = {}): Promise<any> => {

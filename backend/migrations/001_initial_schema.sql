@@ -1,6 +1,9 @@
 -- TeamDash Schema Migration
 -- Paste this entire file into Supabase SQL Editor and run it.
 
+-- If you already ran a previous version of this migration, run this first:
+-- ALTER TABLE project_assignments ADD COLUMN IF NOT EXISTS "updatedAt" TIMESTAMPTZ NOT NULL DEFAULT NOW();
+
 -- Drop existing tables (if any) before recreating
 DROP TABLE IF EXISTS reports CASCADE;
 DROP TABLE IF EXISTS project_assignments CASCADE;
@@ -31,6 +34,7 @@ CREATE TABLE project_assignments (
     "userId"    UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     "projectId" UUID NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
     "createdAt" TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    "updatedAt" TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     UNIQUE ("userId", "projectId")
 );
 
