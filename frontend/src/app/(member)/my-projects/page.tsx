@@ -2,10 +2,11 @@
 
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
+import Link from "next/link"
 import { useAuth } from "@/hooks/useAuth"
 import { api } from "@/lib/api"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { FolderKanban, FileText } from "lucide-react"
+import { FolderKanban, FileText, ChevronRight } from "lucide-react"
 import type { Project } from "@/types"
 
 export default function MyProjectsPage() {
@@ -48,25 +49,30 @@ export default function MyProjectsPage() {
       ) : (
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           {projects.map((project) => (
-            <Card key={project.id}>
-              <CardHeader className="pb-2">
-                <div className="flex items-center gap-2">
-                  <FolderKanban className="h-5 w-5 text-muted-foreground shrink-0" />
-                  <CardTitle className="text-lg">{project.name}</CardTitle>
-                </div>
-              </CardHeader>
-              <CardContent>
-                {project.description && (
-                  <p className="text-sm text-muted-foreground mb-3 line-clamp-2">{project.description}</p>
-                )}
-                <div className="flex items-center gap-3 text-sm text-muted-foreground">
-                  <span><FileText className="h-3 w-3 inline mr-1" />{project._count?.reports || 0} reports</span>
-                </div>
-                {project.createdBy && (
-                  <p className="text-xs text-muted-foreground mt-2">Created by {project.createdBy.name}</p>
-                )}
-              </CardContent>
-            </Card>
+            <Link key={project.id} href={`/my-projects/${project.id}`}>
+              <Card className="cursor-pointer hover:shadow-md transition-shadow h-full">
+                <CardHeader className="pb-2">
+                  <div className="flex items-center gap-2">
+                    <FolderKanban className="h-5 w-5 text-muted-foreground shrink-0" />
+                    <CardTitle className="text-lg">{project.name}</CardTitle>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  {project.description && (
+                    <p className="text-sm text-muted-foreground mb-3 line-clamp-2">{project.description}</p>
+                  )}
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3 text-sm text-muted-foreground">
+                      <span><FileText className="h-3 w-3 inline mr-1" />{project._count?.reports || 0} reports</span>
+                    </div>
+                    <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                  </div>
+                  {project.createdBy && (
+                    <p className="text-xs text-muted-foreground mt-2">Created by {project.createdBy.name}</p>
+                  )}
+                </CardContent>
+              </Card>
+            </Link>
           ))}
         </div>
       )}

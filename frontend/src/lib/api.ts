@@ -35,7 +35,10 @@ export const api = {
     me: () => request<any>("/auth/me"),
   },
   reports: {
-    getMyReports: () => request<any[]>("/reports/me"),
+    getMyReports: (params?: Record<string, string>) => {
+      const query = params ? "?" + new URLSearchParams(params).toString() : ""
+      return request<any[]>(`/reports/me${query}`)
+    },
     create: (data: any) =>
       request<any>("/reports", { method: "POST", body: JSON.stringify(data) }),
     update: (id: string, data: any) =>

@@ -1,11 +1,13 @@
 import prisma from "../../config/prisma";
 
 export class ReportsService {
-  async getMyReports(userId: string, page?: number, limit?: number) {
+  async getMyReports(userId: string, page?: number, limit?: number, projectId?: string) {
     const take = limit || 50;
     const skip = page && page > 1 ? (page - 1) * take : 0;
+    const where: any = { userId };
+    if (projectId) where.projectId = projectId;
     return prisma.report.findMany({
-      where: { userId },
+      where,
       include: { project: { select: { id: true, name: true } } },
       orderBy: { weekStartDate: "desc" },
       take,
