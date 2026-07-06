@@ -25,6 +25,8 @@ async function request<T>(endpoint: string, options: RequestInit = {}): Promise<
 
 export const api = {
   auth: {
+    members: (search?: string) =>
+      request<any[]>(`/auth/members${search ? `?search=${encodeURIComponent(search)}` : ""}`),
     register: (data: { name: string; email: string; password: string; role?: string }) =>
       request<any>("/auth/register", { method: "POST", body: JSON.stringify(data) }),
     login: (data: { email: string; password: string }) =>

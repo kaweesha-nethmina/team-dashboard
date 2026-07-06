@@ -155,6 +155,24 @@ function buildSelect(table: string, select?: any): string {
 
 function applyQuery(table: string, query: any, where: any) {
   if (!where) return query;
+
+  if (where.OR && Array.isArray(where.OR)) {
+    const orConditions = where.OR.map((cond: any) => {
+      const key = Object.keys(cond)[0];
+      const val = cond[key];
+      const c = q(key);
+      if (val && typeof val === "object" && val.ilike !== undefined) {
+        return { column: c, operator: "ilike", value: val.ilike };
+      }
+      return { column: c, operator: "eq", value: val };
+    });
+
+    const orQuery = orConditions.map((oc: any) => `${oc.column}.${oc.operator}.${oc.value}`).join(",");
+    query = query.or(orQuery);
+
+    delete where.OR;
+  }
+
   for (const key of Object.keys(where)) {
     const val = where[key];
     const c = q(key);
