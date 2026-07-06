@@ -19,6 +19,7 @@ const managerLinks = [
 
 const memberLinks = [
   { href: "/my-reports", label: "My Reports", icon: FileText },
+  { href: "/my-projects", label: "My Projects", icon: FolderKanban },
 ]
 
 export function Sidebar() {

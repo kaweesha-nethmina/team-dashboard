@@ -2,9 +2,10 @@ import { Request, Response } from "express";
 import { projectsService } from "./projects.service";
 
 export class ProjectsController {
-  async getAll(_req: Request, res: Response): Promise<void> {
+  async getAll(req: Request, res: Response): Promise<void> {
     try {
-      const projects = await projectsService.getAll();
+      const assignedOnly = req.query.assignedToMe === "true";
+      const projects = await projectsService.getAll(req.user!.userId, assignedOnly);
       res.json(projects);
     } catch (error: unknown) {
       res.status(500).json({ error: error instanceof Error ? error.message : "Failed to load projects" });

@@ -1,7 +1,25 @@
 import prisma from "../../config/prisma";
 
 export class ProjectsService {
-  async getAll() {
+  async getAll(userId?: string, assignedOnly = false) {
+    if (assignedOnly && userId) {
+      const assignments = await prisma.projectAssignment.findMany({
+        where: { userId },
+        select: { projectId: true },
+      });
+      const projectIds = assignments.map((a) => a.projectId);
+      if (projectIds.length === 0) return [];
+
+      return prisma.project.findMany({
+        where: { id: { in: projectIds } },
+        include: {
+          createdBy: { select: { id: true, name: true } },
+          _count: { select: { reports: true } },
+        },
+        orderBy: { createdAt: "desc" },
+      });
+    }
+
     return prisma.project.findMany({
       include: {
         createdBy: { select: { id: true, name: true } },

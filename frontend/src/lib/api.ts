@@ -50,7 +50,10 @@ export const api = {
     getStatus: () => request<any[]>("/reports/status"),
   },
   projects: {
-    getAll: () => request<any[]>("/projects"),
+    getAll: (params?: Record<string, string>) => {
+      const query = params ? "?" + new URLSearchParams(params).toString() : ""
+      return request<any[]>(`/projects${query}`)
+    },
     getById: (id: string) => request<any>(`/projects/${id}`),
     create: (data: { name: string; description?: string }) =>
       request<any>("/projects", { method: "POST", body: JSON.stringify(data) }),
