@@ -156,10 +156,10 @@ export default function LoginPage() {
           
           <div className="z-10 text-white flex flex-col items-center">
             <h2 className="text-4xl font-extrabold mb-4 tracking-tight leading-tight">
-              Welcome to TeamDash
+              Welcome Back!
             </h2>
             <p className="text-white/80 text-sm mb-8 max-w-xs mx-auto leading-relaxed">
-              Monitor team reports, track progress, and gain insights — all in one place.
+              Already part of a team? Log in to view your reports and dashboard.
             </p>
             <Link
               href="/register"
