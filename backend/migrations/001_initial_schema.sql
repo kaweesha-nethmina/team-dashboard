@@ -1,10 +1,6 @@
 -- TeamDash Schema Migration
--- Run: psql -U postgres -d team_dash -f migrations/001_initial_schema.sql
--- Or paste into Supabase SQL Editor (without \c line)
-
-CREATE DATABASE team_dash;
-
-\c team_dash;
+-- Supabase SQL Editor: Paste this entire file directly
+-- psql: psql -U postgres -d team_dash -f migrations/001_initial_schema.sql
 
 CREATE TYPE user_role AS ENUM ('MEMBER', 'MANAGER');
 CREATE TYPE report_status AS ENUM ('DRAFT', 'SUBMITTED', 'LATE');
