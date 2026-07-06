@@ -7,20 +7,13 @@
     "dev": "tsx watch src/index.ts",
     "build": "tsc",
     "start": "node dist/index.js",
-    "db:migrate": "npx prisma migrate dev --name init",
-    "db:push": "npx prisma db push",
-    "db:seed": "tsx prisma/seed.ts",
-    "db:studio": "npx prisma studio",
-    "db:generate": "npx prisma generate",
-    "db:reset": "npx prisma migrate reset --force",
-    "migration:sql": "psql -U postgres -d team_dash -f migrations/001_initial_schema.sql"
+    "seed": "tsx src/config/seed.ts"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "dependencies": {
     "@anthropic-ai/sdk": "^0.110.0",
-    "@prisma/client": "^5.22.0",
     "bcryptjs": "^2.4.3",
     "cookie-parser": "^1.4.6",
     "cors": "^2.8.5",
@@ -38,7 +31,6 @@
     "@types/jsonwebtoken": "^9.0.6",
     "@types/node": "^20.14.0",
     "nodemon": "^3.1.4",
-    "prisma": "^5.22.0",
     "ts-node": "^10.9.2",
     "tsx": "^4.16.0",
     "typescript": "^5.5.0"
