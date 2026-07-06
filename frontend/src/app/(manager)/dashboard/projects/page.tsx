@@ -230,17 +230,18 @@ export default function ProjectsPage() {
       ) : (
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           {projects.map((project) => (
-            <Card key={project.id}>
+            <Link key={project.id} href={`/dashboard/projects/${project.id}`} className="block transition-colors hover:bg-accent/50 rounded-lg">
+              <Card className="border-none shadow-sm">
               <CardHeader className="flex flex-row items-start justify-between space-y-0 pb-2">
-                <Link href={`/dashboard/projects/${project.id}`} className="flex items-center gap-2 hover:underline">
+                <div className="flex items-center gap-2">
                   <FolderKanban className="h-5 w-5 text-muted-foreground" />
                   <CardTitle className="text-lg">{project.name}</CardTitle>
-                </Link>
+                </div>
                 <div className="flex gap-1">
-                  <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => openEdit(project)}>
+                  <Button variant="ghost" size="icon" className="h-8 w-8" onClick={(e) => { e.stopPropagation(); openEdit(project) }}>
                     <Edit2 className="h-4 w-4" />
                   </Button>
-                  <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => handleDelete(project.id)}>
+                  <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={(e) => { e.stopPropagation(); handleDelete(project.id) }}>
                     <Trash2 className="h-4 w-4" />
                   </Button>
                 </div>
@@ -249,7 +250,7 @@ export default function ProjectsPage() {
                 {project.description && <p className="text-sm text-muted-foreground mb-3">{project.description}</p>}
                 <div className="flex items-center justify-between text-sm">
                   <span className="text-muted-foreground">{project._count?.reports || 0} reports</span>
-                  <Button variant="outline" size="sm" className="h-7 text-xs" onClick={() => openMembers(project)}>
+                  <Button variant="outline" size="sm" className="h-7 text-xs" onClick={(e) => { e.stopPropagation(); openMembers(project) }}>
                     <Users className="h-3 w-3 mr-1" /> Members
                   </Button>
                 </div>
@@ -258,6 +259,7 @@ export default function ProjectsPage() {
                 )}
               </CardContent>
             </Card>
+            </Link>
           ))}
         </div>
       )}
