@@ -18,9 +18,11 @@ const createReportSchema = z.object({
   notes: z.string().optional(),
 });
 
+const updateReportSchema = createReportSchema.partial();
+
 router.get("/me", authenticate, requireRole("MEMBER", "MANAGER"), reportsController.getMyReports);
 router.post("/", authenticate, requireRole("MEMBER"), validate(createReportSchema), reportsController.create);
-router.put("/:id", authenticate, requireRole("MEMBER"), reportsController.update);
+router.put("/:id", authenticate, requireRole("MEMBER"), validate(updateReportSchema), reportsController.update);
 router.post("/:id/submit", authenticate, requireRole("MEMBER"), reportsController.submit);
 router.get("/", authenticate, requireRole("MANAGER"), reportsController.getAll);
 router.get("/status", authenticate, requireRole("MANAGER"), reportsController.getSubmissionStatus);

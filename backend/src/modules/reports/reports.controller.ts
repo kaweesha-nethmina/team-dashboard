@@ -4,7 +4,9 @@ import { reportsService } from "./reports.service";
 export class ReportsController {
   async getMyReports(req: Request, res: Response): Promise<void> {
     try {
-      const reports = await reportsService.getMyReports(req.user!.userId);
+      const page = req.query.page ? parseInt(req.query.page as string) : undefined;
+      const limit = req.query.limit ? parseInt(req.query.limit as string) : undefined;
+      const reports = await reportsService.getMyReports(req.user!.userId, page, limit);
       res.json(reports);
     } catch (error: unknown) {
       res.status(500).json({ error: error instanceof Error ? error.message : "Failed to load reports" });
@@ -40,7 +42,12 @@ export class ReportsController {
 
   async getAll(req: Request, res: Response): Promise<void> {
     try {
-      const reports = await reportsService.getAllReports(req.query as any);
+      const filters = {
+        ...req.query,
+        page: req.query.page ? parseInt(req.query.page as string) : undefined,
+        limit: req.query.limit ? parseInt(req.query.limit as string) : undefined,
+      } as any;
+      const reports = await reportsService.getAllReports(filters);
       res.json(reports);
     } catch (error: unknown) {
       res.status(500).json({ error: error instanceof Error ? error.message : "Failed to load reports" });

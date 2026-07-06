@@ -202,6 +202,7 @@ function createModel(model: string) {
           query = query.order(ok, { ascending: od === "asc" });
         }
         if (args.take) query = query.limit(args.take);
+        if (args.skip) query = query.range(args.skip, args.skip + (args.take || 50) - 1);
         const { data, error } = await query;
         if (error || !data) return [];
         let results = data;
