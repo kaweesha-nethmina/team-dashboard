@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useCallback } from "react"
+import { useState, useEffect, useCallback, useRef } from "react"
 import { useRouter } from "next/navigation"
 import { useAuth } from "@/hooks/useAuth"
 import { api } from "@/lib/api"
@@ -13,7 +13,7 @@ import { Textarea } from "@/components/ui/textarea"
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger,
 } from "@/components/ui/dialog"
-import { Plus, Edit2, Trash2, Users, FolderKanban, AlertCircle, X } from "lucide-react"
+import { Plus, Edit2, Trash2, Users, FolderKanban, AlertCircle, X, Search } from "lucide-react"
 import type { Project, User } from "@/types"
 
 export default function ProjectsPage() {
@@ -30,6 +30,12 @@ export default function ProjectsPage() {
   const [formError, setFormError] = useState("")
   const [formLoading, setFormLoading] = useState(false)
   const [assignUserId, setAssignUserId] = useState("")
+  const [allMembers, setAllMembers] = useState<User[]>([])
+  const [assignSearch, setAssignSearch] = useState("")
+  const [assignSuggestions, setAssignSuggestions] = useState<User[]>([])
+  const [showAssignSuggestions, setShowAssignSuggestions] = useState(false)
+  const [selectedAssignMember, setSelectedAssignMember] = useState<User | null>(null)
+  const assignSearchRef = useRef<HTMLDivElement>(null)
 
   const loadProjects = useCallback(async () => {
     try {
@@ -115,6 +121,51 @@ export default function ProjectsPage() {
     } catch (err) {
       console.error("Failed to load members:", err)
     }
+  }
+
+  useEffect(() => {
+    api.auth.members().then(setAllMembers).catch(console.error)
+  }, [])
+
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (assignSearchRef.current && !assignSearchRef.current.contains(e.target as Node)) {
+        setShowAssignSuggestions(false)
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside)
+    return () => document.removeEventListener("mousedown", handleClickOutside)
+  }, [])
+
+  const handleAssignSearchChange = (value: string) => {
+    setAssignSearch(value)
+    setSelectedAssignMember(null)
+    if (value.length === 0) {
+      setAssignSuggestions([])
+      setShowAssignSuggestions(false)
+      return
+    }
+    const filtered = allMembers.filter(
+      (m) =>
+        m.name.toLowerCase().includes(value.toLowerCase()) ||
+        m.email.toLowerCase().includes(value.toLowerCase())
+    )
+    setAssignSuggestions(filtered)
+    setShowAssignSuggestions(true)
+  }
+
+  const selectAssignMember = (member: User) => {
+    setSelectedAssignMember(member)
+    setAssignSearch(`${member.name} (${member.email})`)
+    setAssignUserId(member.id)
+    setShowAssignSuggestions(false)
+  }
+
+  const clearAssignMember = () => {
+    setSelectedAssignMember(null)
+    setAssignSearch("")
+    setAssignUserId("")
+    setAssignSuggestions([])
   }
 
   const handleAssignUser = async () => {
@@ -249,8 +300,36 @@ export default function ProjectsPage() {
                 ))}
               </div>
             )}
-            <div className="flex items-center gap-2">
-              <Input placeholder="Enter user ID..." value={assignUserId} onChange={(e) => setAssignUserId(e.target.value)} />
+            <div className="flex items-center gap-2" ref={assignSearchRef}>
+              <div className="relative flex-1">
+                <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground pointer-events-none" />
+                <Input
+                  placeholder="Search member by name or email..."
+                  value={assignSearch}
+                  onChange={(e) => handleAssignSearchChange(e.target.value)}
+                  onFocus={() => { if (assignSuggestions.length > 0) setShowAssignSuggestions(true) }}
+                  className="pl-8"
+                />
+                {selectedAssignMember && (
+                  <button onClick={clearAssignMember} className="absolute right-2 top-2.5">
+                    <X className="h-4 w-4 text-muted-foreground hover:text-foreground" />
+                  </button>
+                )}
+                {showAssignSuggestions && assignSuggestions.length > 0 && (
+                  <div className="absolute z-50 top-full mt-1 w-full bg-popover border rounded-md shadow-lg max-h-48 overflow-y-auto">
+                    {assignSuggestions.map((m) => (
+                      <button
+                        key={m.id}
+                        onClick={() => selectAssignMember(m)}
+                        className="w-full text-left px-3 py-2 hover:bg-accent text-sm flex flex-col"
+                      >
+                        <span className="font-medium">{m.name}</span>
+                        <span className="text-xs text-muted-foreground">{m.email}</span>
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
               <Button size="sm" onClick={handleAssignUser} disabled={!assignUserId}>Add</Button>
             </div>
           </div>
