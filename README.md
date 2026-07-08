@@ -22,7 +22,7 @@ A full-stack team management application for generating weekly reports and track
 
 ## ER Diagram
 
-[View ER Diagram on dbdiagram.io](https://dbdiagram.io/d/teamdash-schema) <!-- Replace with your actual dbdiagram link -->
+[View ER Diagram](https://drive.google.com/file/d/1IF83plx3xEehKYhQqWID2FH3OOF0GFyB/view?usp=sharing) 
 
 ### Entities
 
@@ -34,7 +34,7 @@ A full-stack team management application for generating weekly reports and track
 ## Project Structure
 
 ```
-Github/
+TeamDash/
 ├── backend/
 │   ├── src/
 │   │   ├── config/        # env, prisma-like supabase adapter, seed script
@@ -170,3 +170,11 @@ All endpoints are prefixed with `/auth`, `/reports`, `/projects`, `/dashboard`, 
 | GET | `/dashboard/recent-activity` | Manager | Recent submissions |
 | POST | `/ai/ask` | Manager | Natural-language Q&A |
 | GET | `/ai/summary` | Manager | AI team summary |
+
+
+# test
+Tests (47 passing)
+- Auth tests (10) — register, login, getMe, getMembers with validation errors
+- Reports tests (16) — CRUD, submit, filter, pagination, ownership checks, submission status
+- Projects tests (13) — CRUD, assign by email, duplicate assignment guard, member listing
+- Dashboard tests (8) — summary, trends, workload, member status, recent activity, tasks by project

@@ -1,8 +1,7 @@
 "use client"
 
-import { useState, useEffect, useCallback, useRef } from "react"
+import { useState, useEffect, useCallback } from "react"
 import { useRouter } from "next/navigation"
-import Link from "next/link"
 import { useAuth } from "@/hooks/useAuth"
 import { api } from "@/lib/api"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -14,7 +13,7 @@ import { Textarea } from "@/components/ui/textarea"
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger,
 } from "@/components/ui/dialog"
-import { Plus, Edit2, Trash2, Users, FolderKanban, AlertCircle, X, Search } from "lucide-react"
+import { Plus, Edit2, Trash2, Users, FolderKanban, AlertCircle, X, Search, UserCheck } from "lucide-react"
 import type { Project, User } from "@/types"
 
 export default function ProjectsPage() {
@@ -31,12 +30,7 @@ export default function ProjectsPage() {
   const [formError, setFormError] = useState("")
   const [formLoading, setFormLoading] = useState(false)
   const [assignUserId, setAssignUserId] = useState("")
-  const [allMembers, setAllMembers] = useState<User[]>([])
-  const [assignSearch, setAssignSearch] = useState("")
-  const [assignSuggestions, setAssignSuggestions] = useState<User[]>([])
-  const [showAssignSuggestions, setShowAssignSuggestions] = useState(false)
-  const [selectedAssignMember, setSelectedAssignMember] = useState<User | null>(null)
-  const assignSearchRef = useRef<HTMLDivElement>(null)
+  const [searchTerm, setSearchTerm] = useState("")
 
   const loadProjects = useCallback(async () => {
     try {
@@ -124,51 +118,6 @@ export default function ProjectsPage() {
     }
   }
 
-  useEffect(() => {
-    api.auth.members().then(setAllMembers).catch(console.error)
-  }, [])
-
-  useEffect(() => {
-    function handleClickOutside(e: MouseEvent) {
-      if (assignSearchRef.current && !assignSearchRef.current.contains(e.target as Node)) {
-        setShowAssignSuggestions(false)
-      }
-    }
-    document.addEventListener("mousedown", handleClickOutside)
-    return () => document.removeEventListener("mousedown", handleClickOutside)
-  }, [])
-
-  const handleAssignSearchChange = (value: string) => {
-    setAssignSearch(value)
-    setSelectedAssignMember(null)
-    if (value.length === 0) {
-      setAssignSuggestions([])
-      setShowAssignSuggestions(false)
-      return
-    }
-    const filtered = allMembers.filter(
-      (m) =>
-        m.name.toLowerCase().includes(value.toLowerCase()) ||
-        m.email.toLowerCase().includes(value.toLowerCase())
-    )
-    setAssignSuggestions(filtered)
-    setShowAssignSuggestions(true)
-  }
-
-  const selectAssignMember = (member: User) => {
-    setSelectedAssignMember(member)
-    setAssignSearch(`${member.name} (${member.email})`)
-    setAssignUserId(member.email)
-    setShowAssignSuggestions(false)
-  }
-
-  const clearAssignMember = () => {
-    setSelectedAssignMember(null)
-    setAssignSearch("")
-    setAssignUserId("")
-    setAssignSuggestions([])
-  }
-
   const handleAssignUser = async () => {
     if (!selectedProject || !assignUserId) return
     try {
@@ -192,148 +141,182 @@ export default function ProjectsPage() {
     }
   }
 
+  const filteredProjects = projects.filter((p) =>
+    p.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    (p.description && p.description.toLowerCase().includes(searchTerm.toLowerCase()))
+  )
+
   if (authLoading || loading) {
-    return <div className="flex justify-center py-12"><div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full" /></div>
+    return (
+      <div className="flex justify-center py-12">
+        <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full" />
+      </div>
+    )
   }
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      {/* Top Banner Section */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-gray-100 pb-5">
         <div>
-          <h1 className="text-3xl font-bold">Projects</h1>
-          <p className="text-muted-foreground">Manage projects and team assignments</p>
+          <h1 className="text-3xl font-extrabold tracking-tight text-gray-900">Projects Workspace</h1>
+          <p className="text-sm text-gray-500 font-medium mt-1">Manage core projects and team members assignments</p>
         </div>
-        <Dialog open={createOpen} onOpenChange={(o) => { setCreateOpen(o); if (!o) resetForm() }}>
-          <DialogTrigger asChild>
-            <Button><Plus className="h-4 w-4 mr-2" />New Project</Button>
-          </DialogTrigger>
-          <DialogContent>
-            <DialogHeader><DialogTitle>Create Project</DialogTitle></DialogHeader>
-            <form onSubmit={handleCreate} className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="name">Project name</Label>
-                <Input id="name" value={formData.name} onChange={(e) => setFormData((p) => ({ ...p, name: e.target.value }))} required />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="desc">Description</Label>
-                <Textarea id="desc" value={formData.description} onChange={(e) => setFormData((p) => ({ ...p, description: e.target.value }))} rows={3} />
-              </div>
-              {formError && <p className="text-sm text-destructive flex items-center gap-1"><AlertCircle className="h-3 w-3" />{formError}</p>}
-              <Button type="submit" disabled={formLoading}>{formLoading ? "Creating..." : "Create"}</Button>
-            </form>
-          </DialogContent>
-        </Dialog>
+        <div className="flex items-center gap-3">
+          {/* Search bar inside header row to populate whitespace */}
+          <div className="relative w-48 sm:w-64">
+            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+            <Input 
+              placeholder="Search projects..." 
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-9 h-10 rounded-xl bg-white border-gray-200 focus-visible:ring-indigo-500 font-medium text-xs shadow-sm"
+            />
+          </div>
+          
+          <Dialog open={createOpen} onOpenChange={(o) => { setCreateOpen(o); if (!o) resetForm() }}>
+            <DialogTrigger asChild>
+              <Button className="h-10 rounded-xl px-5 font-bold shadow-sm flex items-center gap-1.5"><Plus className="h-4.5 w-4.5" />New Project</Button>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-md rounded-2xl">
+              <DialogHeader><DialogTitle className="text-xl font-bold">Create New Project</DialogTitle></DialogHeader>
+              <form onSubmit={handleCreate} className="space-y-4 pt-2">
+                <div className="space-y-2">
+                  <Label htmlFor="name" className="font-semibold text-gray-700">Project name</Label>
+                  <Input id="name" value={formData.name} onChange={(e) => setFormData((p) => ({ ...p, name: e.target.value }))} required className="rounded-xl border-gray-200" placeholder="e.g. Website Redesign" />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="desc" className="font-semibold text-gray-700">Description</Label>
+                  <Textarea id="desc" value={formData.description} onChange={(e) => setFormData((p) => ({ ...p, description: e.target.value }))} rows={3} className="rounded-xl border-gray-200" placeholder="Summarize project scope..." />
+                </div>
+                {formError && <p className="text-sm text-destructive flex items-center gap-1.5 font-semibold"><AlertCircle className="h-4 w-4" />{formError}</p>}
+                <Button type="submit" disabled={formLoading} className="w-full rounded-xl py-2 font-bold">{formLoading ? "Creating..." : "Create Project"}</Button>
+              </form>
+            </DialogContent>
+          </Dialog>
+        </div>
       </div>
 
-      {projects.length === 0 ? (
-        <p className="text-center text-muted-foreground py-12">No projects yet. Create your first one!</p>
+      {filteredProjects.length === 0 ? (
+        <div className="text-center py-16 bg-white rounded-2xl border border-gray-100 shadow-sm max-w-md mx-auto">
+          <FolderKanban className="h-12 w-12 text-gray-300 mx-auto mb-3" />
+          <h3 className="font-bold text-gray-800 text-lg">No Projects Found</h3>
+          <p className="text-sm text-gray-400 mt-1 px-6">
+            {searchTerm ? "No projects match your search query. Try another keyword." : "Create your first project to start tracking reports."}
+          </p>
+        </div>
       ) : (
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {projects.map((project) => (
-            <Link key={project.id} href={`/dashboard/projects/${project.id}`} className="block transition-colors hover:bg-accent/50 rounded-lg">
-              <Card className="border-none shadow-sm">
-              <CardHeader className="flex flex-row items-start justify-between space-y-0 pb-2">
-                <div className="flex items-center gap-2">
-                  <FolderKanban className="h-5 w-5 text-muted-foreground" />
-                  <CardTitle className="text-lg">{project.name}</CardTitle>
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+          {filteredProjects.map((project) => (
+            <Card key={project.id} className="transition-all duration-300 hover:-translate-y-1 hover:shadow-lg border-gray-100 hover:border-indigo-100/80 bg-white rounded-2xl flex flex-col justify-between overflow-hidden">
+              <CardHeader className="flex flex-row items-start justify-between space-y-0 pb-3">
+                <div className="flex items-center gap-3">
+                  <div className="p-2.5 rounded-xl bg-indigo-50 border border-indigo-100/50">
+                    <FolderKanban className="h-5 w-5 text-indigo-600" />
+                  </div>
+                  <div>
+                    <CardTitle className="text-base font-extrabold text-gray-800 leading-tight">{project.name}</CardTitle>
+                    {project.createdBy && (
+                      <p className="text-[10px] text-gray-400 mt-0.5 font-bold">BY {project.createdBy.name.toUpperCase()}</p>
+                    )}
+                  </div>
                 </div>
-                <div className="flex gap-1">
-                  <Button variant="ghost" size="icon" className="h-8 w-8" onClick={(e) => { e.stopPropagation(); openEdit(project) }}>
+                <div className="flex gap-0.5">
+                  <Button variant="ghost" size="icon" className="h-8 w-8 text-gray-400 hover:text-gray-600 rounded-lg" onClick={() => openEdit(project)}>
                     <Edit2 className="h-4 w-4" />
                   </Button>
-                  <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={(e) => { e.stopPropagation(); handleDelete(project.id) }}>
+                  <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive/70 hover:text-destructive hover:bg-destructive/10 rounded-lg" onClick={() => handleDelete(project.id)}>
                     <Trash2 className="h-4 w-4" />
                   </Button>
                 </div>
               </CardHeader>
-              <CardContent>
-                {project.description && <p className="text-sm text-muted-foreground mb-3">{project.description}</p>}
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-muted-foreground">{project._count?.reports || 0} reports</span>
-                  <Button variant="outline" size="sm" className="h-7 text-xs" onClick={(e) => { e.stopPropagation(); openMembers(project) }}>
-                    <Users className="h-3 w-3 mr-1" /> Members
+              <CardContent className="flex-1 flex flex-col justify-between pt-1">
+                <div>
+                  <p className="text-sm text-gray-500 leading-relaxed font-medium line-clamp-2 min-h-[40px] mb-4">
+                    {project.description || "No description provided. Add one to describe project scope and outline."}
+                  </p>
+                </div>
+                
+                <div className="border-t border-gray-50 pt-4 flex items-center justify-between">
+                  <div className="flex flex-col gap-0.5">
+                    <span className="text-xs font-bold text-gray-800">{project._count?.reports || 0} reports</span>
+                    <span className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">Total Submissions</span>
+                  </div>
+
+                  <Button variant="outline" size="sm" className="h-8 rounded-lg text-xs font-bold border-gray-200 hover:bg-indigo-50 hover:text-indigo-600 hover:border-indigo-100 transition-all" onClick={() => openMembers(project)}>
+                    <Users className="h-3.5 w-3.5 mr-1.5" /> Members
                   </Button>
                 </div>
-                {project.createdBy && (
-                  <p className="text-xs text-muted-foreground mt-2">Created by {project.createdBy.name}</p>
-                )}
               </CardContent>
             </Card>
-            </Link>
           ))}
         </div>
       )}
 
+      {/* Edit Dialog */}
       <Dialog open={editOpen} onOpenChange={(o) => { setEditOpen(o); if (!o) { resetForm(); setSelectedProject(null) } }}>
-        <DialogContent>
-          <DialogHeader><DialogTitle>Edit Project</DialogTitle></DialogHeader>
-          <form onSubmit={handleEdit} className="space-y-4">
+        <DialogContent className="sm:max-w-md rounded-2xl">
+          <DialogHeader><DialogTitle className="text-xl font-bold">Edit Project</DialogTitle></DialogHeader>
+          <form onSubmit={handleEdit} className="space-y-4 pt-2">
             <div className="space-y-2">
-              <Label htmlFor="edit-name">Project name</Label>
-              <Input id="edit-name" value={formData.name} onChange={(e) => setFormData((p) => ({ ...p, name: e.target.value }))} required />
+              <Label htmlFor="edit-name" className="font-semibold text-gray-700">Project name</Label>
+              <Input id="edit-name" value={formData.name} onChange={(e) => setFormData((p) => ({ ...p, name: e.target.value }))} required className="rounded-xl border-gray-200" />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="edit-desc">Description</Label>
-              <Textarea id="edit-desc" value={formData.description} onChange={(e) => setFormData((p) => ({ ...p, description: e.target.value }))} rows={3} />
+              <Label htmlFor="edit-desc" className="font-semibold text-gray-700">Description</Label>
+              <Textarea id="edit-desc" value={formData.description} onChange={(e) => setFormData((p) => ({ ...p, description: e.target.value }))} rows={3} className="rounded-xl border-gray-200" />
             </div>
-            {formError && <p className="text-sm text-destructive flex items-center gap-1"><AlertCircle className="h-3 w-3" />{formError}</p>}
-            <Button type="submit" disabled={formLoading}>{formLoading ? "Saving..." : "Save"}</Button>
+            {formError && <p className="text-sm text-destructive flex items-center gap-1.5 font-semibold"><AlertCircle className="h-4 w-4" />{formError}</p>}
+            <Button type="submit" disabled={formLoading} className="w-full rounded-xl py-2 font-bold">{formLoading ? "Saving..." : "Save Changes"}</Button>
           </form>
         </DialogContent>
       </Dialog>
 
+      {/* Members Dialog */}
       <Dialog open={membersOpen} onOpenChange={(o) => { setMembersOpen(o); if (!o) setSelectedProject(null) }}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader><DialogTitle>Members - {selectedProject?.name}</DialogTitle></DialogHeader>
-          <div className="space-y-4">
+        <DialogContent className="sm:max-w-md rounded-2xl">
+          <DialogHeader>
+            <DialogTitle className="text-lg font-bold text-gray-800 flex items-center gap-2">
+              <Users className="h-5 w-5 text-indigo-600" /> Project Members - {selectedProject?.name}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 pt-2">
             {members.length === 0 ? (
-              <p className="text-sm text-muted-foreground">No members assigned yet</p>
+              <div className="text-center py-6 bg-gray-50 rounded-xl border border-dashed border-gray-200">
+                <p className="text-xs text-gray-400 font-medium">No members assigned to this project yet.</p>
+              </div>
             ) : (
-              <div className="space-y-2">
-                {members.map((m) => (
-                  <div key={m.id} className="flex items-center justify-between rounded-lg border px-3 py-2">
-                    <div>
-                      <p className="text-sm font-medium">{m.name}</p>
-                      <p className="text-xs text-muted-foreground">{m.email}</p>
+              <div className="space-y-2.5 max-h-60 overflow-y-auto pr-1">
+                {members.map((m) => {
+                  const mInitials = m.name.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2)
+                  return (
+                    <div key={m.id} className="flex items-center justify-between rounded-xl border border-gray-100 bg-white p-2.5 shadow-sm hover:border-gray-200 transition-colors">
+                      <div className="flex items-center gap-3">
+                        <div className="h-8 w-8 rounded-full bg-indigo-50 flex items-center justify-center text-[11px] font-bold text-indigo-600">
+                          {mInitials}
+                        </div>
+                        <div>
+                          <p className="text-xs font-bold text-gray-800 leading-tight">{m.name}</p>
+                          <p className="text-[10px] text-gray-400 font-medium mt-0.5">{m.email}</p>
+                        </div>
+                      </div>
+                      <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive/70 hover:text-destructive hover:bg-destructive/10 rounded-lg" onClick={() => handleRemoveUser(m.id)}>
+                        <X className="h-3.5 w-3.5" />
+                      </Button>
                     </div>
-                    <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={() => handleRemoveUser(m.id)}>
-                      <X className="h-3 w-3" />
-                    </Button>
-                  </div>
-                ))}
+                  )
+                })}
               </div>
             )}
-            <div className="flex items-center gap-2" ref={assignSearchRef}>
-              <div className="relative flex-1">
-                <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground pointer-events-none" />
-                <Input
-                  placeholder="Search member by name or email..."
-                  value={assignSearch}
-                  onChange={(e) => handleAssignSearchChange(e.target.value)}
-                  onFocus={() => { if (assignSuggestions.length > 0) setShowAssignSuggestions(true) }}
-                  className="pl-8"
-                />
-                {selectedAssignMember && (
-                  <button onClick={clearAssignMember} className="absolute right-2 top-2.5">
-                    <X className="h-4 w-4 text-muted-foreground hover:text-foreground" />
-                  </button>
-                )}
-                {showAssignSuggestions && assignSuggestions.length > 0 && (
-                  <div className="absolute z-50 top-full mt-1 w-full bg-popover border rounded-md shadow-lg max-h-48 overflow-y-auto">
-                    {assignSuggestions.map((m) => (
-                      <button
-                        key={m.id}
-                        onClick={() => selectAssignMember(m)}
-                        className="w-full text-left px-3 py-2 hover:bg-accent text-sm flex flex-col"
-                      >
-                        <span className="font-medium">{m.name}</span>
-                        <span className="text-xs text-muted-foreground">{m.email}</span>
-                      </button>
-                    ))}
-                  </div>
-                )}
+            
+            <div className="border-t border-gray-50 pt-4 space-y-2">
+              <Label className="text-xs font-bold text-gray-600 flex items-center gap-1.5 mb-1">
+                <UserCheck className="h-4 w-4 text-gray-400" /> Assign User
+              </Label>
+              <div className="flex items-center gap-2">
+                <Input placeholder="Enter member user ID..." value={assignUserId} onChange={(e) => setAssignUserId(e.target.value)} className="rounded-xl border-gray-200 text-xs h-9.5" />
+                <Button size="sm" onClick={handleAssignUser} disabled={!assignUserId} className="rounded-xl h-9.5 font-bold px-4">Add</Button>
               </div>
-              <Button size="sm" onClick={handleAssignUser} disabled={!assignUserId}>Add</Button>
             </div>
           </div>
         </DialogContent>
