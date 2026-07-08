@@ -262,6 +262,8 @@ describe("ReportsService", () => {
 
   describe("getSubmissionStatus", () => {
     it("should return submission status for all members", async () => {
+      vi.mocked(prisma.report.findMany)
+        .mockResolvedValueOnce([]); // markLateReports
       vi.mocked(prisma.user.findMany).mockResolvedValue([
         {
           id: "user-1",

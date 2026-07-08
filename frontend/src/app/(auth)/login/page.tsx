@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation"
 import Link from "next/link"
 import { useAuth } from "@/hooks/useAuth"
 import { Eye, EyeOff, Mail, Lock, AlertCircle, ArrowRight } from "lucide-react"
+import { toast } from "sonner"
 
 export default function LoginPage() {
   const [email, setEmail] = useState("")
@@ -23,6 +24,7 @@ export default function LoginPage() {
     setIsShaking(false)
     try {
       await login(email, password)
+      toast.success("Welcome back!")
       router.push("/my-reports")
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Login failed")

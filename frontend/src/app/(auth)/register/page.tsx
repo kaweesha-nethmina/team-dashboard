@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation"
 import Link from "next/link"
 import { useAuth } from "@/hooks/useAuth"
 import { Eye, EyeOff, Mail, Lock, User, AlertCircle, ArrowRight } from "lucide-react"
+import { toast } from "sonner"
 
 export default function RegisterPage() {
   const [name, setName] = useState("")
@@ -24,6 +25,7 @@ export default function RegisterPage() {
     setIsShaking(false)
     try {
       await register(name, email, password)
+      toast.success("Account created! Welcome to TeamDash.")
       router.push("/my-reports")
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Registration failed")
