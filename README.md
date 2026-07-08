@@ -95,6 +95,29 @@ npm install
 npm run dev
 ```
 
+### Docker Setup
+
+Pull and run with Docker:
+
+```bash
+# Create a backend .env file
+cp backend/.env.example .env
+# Edit .env with your Supabase credentials
+
+# Run both services
+docker compose up
+
+# Or pull individual images
+docker pull kaweesha/backend
+docker pull kaweesha/frontend
+
+# Run with custom env
+docker run -p 4000:4000 --env-file backend/.env kaweesha/backend
+docker run -p 3000:3000 kaweesha/frontend
+```
+
+> Frontend connects to backend at `http://localhost:4000` by default. Override with `NEXT_PUBLIC_API_URL` build arg if deploying elsewhere.
+
 ### Environment Variables
 
 **Backend** (`backend/.env`):
