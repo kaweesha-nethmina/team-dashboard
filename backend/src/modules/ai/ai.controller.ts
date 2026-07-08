@@ -4,12 +4,12 @@ import { aiService } from "./ai.service";
 export class AIController {
   async ask(req: Request, res: Response): Promise<void> {
     try {
-      const { question } = req.body;
+      const { question, projectId } = req.body;
       if (!question || typeof question !== "string") {
         res.status(400).json({ error: "Question is required" });
         return;
       }
-      const result = await aiService.askQuestion(question);
+      const result = await aiService.askQuestion(question, projectId || undefined);
       res.json(result);
     } catch (error: unknown) {
       res.status(500).json({ error: error instanceof Error ? error.message : "Failed to process question" });

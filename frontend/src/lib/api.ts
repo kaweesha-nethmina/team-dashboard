@@ -35,7 +35,10 @@ export const api = {
     me: () => request<any>("/auth/me"),
   },
   reports: {
-    getMyReports: () => request<any[]>("/reports/me"),
+    getMyReports: (params?: Record<string, string>) => {
+      const query = params ? "?" + new URLSearchParams(params).toString() : ""
+      return request<any[]>(`/reports/me${query}`)
+    },
     create: (data: any) =>
       request<any>("/reports", { method: "POST", body: JSON.stringify(data) }),
     update: (id: string, data: any) =>
@@ -50,7 +53,10 @@ export const api = {
     getStatus: () => request<any[]>("/reports/status"),
   },
   projects: {
-    getAll: () => request<any[]>("/projects"),
+    getAll: (params?: Record<string, string>) => {
+      const query = params ? "?" + new URLSearchParams(params).toString() : ""
+      return request<any[]>(`/projects${query}`)
+    },
     getById: (id: string) => request<any>(`/projects/${id}`),
     create: (data: { name: string; description?: string }) =>
       request<any>("/projects", { method: "POST", body: JSON.stringify(data) }),
@@ -74,8 +80,10 @@ export const api = {
     getTasksByProject: () => request<any[]>("/dashboard/tasks-by-project"),
   },
   ai: {
-    ask: (question: string) =>
-      request<{ answer: string; context: string }>("/ai/ask", { method: "POST", body: JSON.stringify({ question }) }),
+    ask: (question: string, projectId?: string) =>
+      request<{ answer: string; context: string; requiresProjectSelection: boolean; projects: { id: string; name: string }[] }>(
+        "/ai/ask", { method: "POST", body: JSON.stringify({ question, projectId }) }
+      ),
     summary: (params?: { projectId?: string; startDate?: string; endDate?: string }) => {
       const query = params ? "?" + new URLSearchParams(params as any).toString() : ""
       return request<{ summary: string; context: string }>(`/ai/summary${query}`)

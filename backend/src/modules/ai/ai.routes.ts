@@ -9,6 +9,7 @@ const router = Router();
 
 const askSchema = z.object({
   question: z.string().min(1, "Question is required"),
+  projectId: z.string().uuid("Invalid project ID").optional(),
 });
 
 router.post("/ask", authenticate, requireRole("MANAGER"), validate(askSchema), aiController.ask);

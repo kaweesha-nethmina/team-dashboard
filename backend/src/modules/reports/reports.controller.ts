@@ -6,7 +6,8 @@ export class ReportsController {
     try {
       const page = req.query.page ? parseInt(req.query.page as string) : undefined;
       const limit = req.query.limit ? parseInt(req.query.limit as string) : undefined;
-      const reports = await reportsService.getMyReports(req.user!.userId, page, limit);
+      const projectId = req.query.projectId as string | undefined;
+      const reports = await reportsService.getMyReports(req.user!.userId, page, limit, projectId);
       res.json(reports);
     } catch (error: unknown) {
       res.status(500).json({ error: error instanceof Error ? error.message : "Failed to load reports" });

@@ -11,6 +11,7 @@ import { WorkloadChart } from "@/components/dashboard/WorkloadChart"
 import { AIChatWidget } from "@/components/chat/AIChatWidget"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
+import { LayoutDashboard, ArrowUpRight } from "lucide-react"
 import type { DashboardSummary, Trend, MemberStatus, Workload, RecentActivity } from "@/types"
 
 export default function DashboardPage() {
@@ -52,45 +53,92 @@ export default function DashboardPage() {
   }
 
   if (authLoading || loading) {
-    return <div className="flex justify-center py-12"><div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full" /></div>
+    return (
+      <div className="flex justify-center py-12">
+        <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full" />
+      </div>
+    )
   }
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold">Dashboard</h1>
-        <p className="text-muted-foreground">Team overview and performance metrics</p>
+      <div className="relative rounded-2xl overflow-hidden p-6 sm:p-8 bg-gradient-to-r from-emerald-800 via-teal-800 to-amber-700 dark:from-emerald-950 dark:via-teal-950 dark:to-amber-950 text-white shadow-lg animate-card-slide-in">
+        {/* Decorative elements */}
+        <div className="absolute top-[-50%] right-[-10%] w-72 h-72 rounded-full bg-white/10 blur-xl pointer-events-none animate-float-1" />
+        <div className="absolute bottom-[-30%] right-[20%] w-48 h-48 rounded-full bg-white/10 blur-lg pointer-events-none animate-float-2" />
+        
+        <div className="relative z-10 space-y-2">
+          <span className="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-white/90 bg-white/15 px-3 py-1 rounded-full backdrop-blur-sm">
+            <LayoutDashboard className="h-3.5 w-3.5" /> Manager Dashboard
+          </span>
+          <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight">Welcome back, {user?.name}!</h1>
+          <p className="text-sm sm:text-base text-white/80 max-w-2xl leading-relaxed">
+            Track weekly report compliance metrics, manage active project details, and address member blockers.
+          </p>
+        </div>
       </div>
 
-      {summary && <SummaryCards data={summary} />}
+      {/* Grid Layout: Main Area vs Sidebar */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
+        {/* Left Content Area (2 Columns) */}
+        <div className="lg:col-span-2 space-y-6">
+          {summary && <SummaryCards data={summary} />}
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <TasksTrendChart data={trends} />
+            <SubmissionStatusChart data={memberStatus} />
+          </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <TasksTrendChart data={trends} />
-        <SubmissionStatusChart data={memberStatus} />
-      </div>
+          {workload.length > 0 && <WorkloadChart data={workload} />}
+        </div>
 
-      {workload.length > 0 && (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <WorkloadChart data={workload} />
-          <Card>
-            <CardHeader><CardTitle className="text-lg">Recent Activity</CardTitle></CardHeader>
-            <CardContent>
+        {/* Right Sidebar Area (1 Column) */}
+        <div className="space-y-6">
+          {/* Quick Actions Panel */}
+          <Card className="border-border shadow-sm bg-card rounded-2xl overflow-hidden">
+            <CardHeader className="border-b border-border pb-3">
+              <CardTitle className="text-base font-bold text-foreground">Quick Actions</CardTitle>
+            </CardHeader>
+            <CardContent className="pt-4 space-y-2">
+              <button 
+                onClick={() => router.push("/dashboard/projects")}
+                className="w-full flex items-center justify-between p-3.5 rounded-xl text-sm font-semibold text-muted-foreground bg-muted hover:bg-emerald-500/10 hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors border border-transparent hover:border-emerald-500/20 group"
+              >
+                <span>Manage Projects</span>
+                <ArrowUpRight className="h-4.5 w-4.5 text-muted-foreground group-hover:text-emerald-700 transition-colors" />
+              </button>
+              <button 
+                onClick={() => router.push("/dashboard/reports")}
+                className="w-full flex items-center justify-between p-3.5 rounded-xl text-sm font-semibold text-muted-foreground bg-muted hover:bg-emerald-500/10 hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors border border-transparent hover:border-emerald-500/20 group"
+              >
+                <span>View Team Reports</span>
+                <ArrowUpRight className="h-4.5 w-4.5 text-muted-foreground group-hover:text-emerald-700 transition-colors" />
+              </button>
+            </CardContent>
+          </Card>
+
+          {/* Recent Activity Card */}
+          <Card className="border-border shadow-sm bg-card rounded-2xl">
+            <CardHeader className="pb-3 border-b border-border">
+              <CardTitle className="text-base font-bold text-foreground">Recent Submissions</CardTitle>
+            </CardHeader>
+            <CardContent className="pt-4">
               {recentActivity.length === 0 ? (
-                <p className="text-sm text-muted-foreground">No recent submissions</p>
+                <p className="text-sm text-muted-foreground text-center py-6 font-medium">No recent reports</p>
               ) : (
                 <div className="space-y-4">
                   {recentActivity.map((a) => (
-                    <div key={a.id} className="flex items-center justify-between border-b pb-2 last:border-0">
-                      <div>
-                        <p className="text-sm font-medium">{a.user.name}</p>
-                        <p className="text-xs text-muted-foreground">{a.project.name}</p>
-                      </div>
-                      <div className="text-right">
-                        <p className="text-xs text-muted-foreground">
+                    <div key={a.id} className="flex items-start justify-between border-b border-border pb-3 last:border-0 last:pb-0 last:border-b-0">
+                      <div className="space-y-0.5">
+                        <p className="text-sm font-bold text-foreground">{a.user.name}</p>
+                        <p className="text-xs text-muted-foreground font-semibold">{a.project.name}</p>
+                        <p className="text-[10px] text-muted-foreground font-bold">
                           {new Date(a.weekStartDate).toLocaleDateString()} - {new Date(a.weekEndDate).toLocaleDateString()}
                         </p>
-                        <Badge variant="success" className="text-xs">Submitted</Badge>
                       </div>
+                      <Badge variant="success" className="text-[9px] px-2 py-0.5 font-bold uppercase tracking-wider">
+                        Submitted
+                      </Badge>
                     </div>
                   ))}
                 </div>
@@ -98,7 +146,7 @@ export default function DashboardPage() {
             </CardContent>
           </Card>
         </div>
-      )}
+      </div>
 
       <AIChatWidget />
     </div>
