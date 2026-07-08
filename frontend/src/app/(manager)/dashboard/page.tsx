@@ -62,8 +62,7 @@ export default function DashboardPage() {
 
   return (
     <div className="space-y-6">
-      {/* Welcome Banner Card */}
-      <div className="relative rounded-2xl overflow-hidden p-6 sm:p-8 bg-gradient-to-r from-indigo-600 via-violet-600 to-pink-500 text-white shadow-lg animate-card-slide-in">
+      <div className="relative rounded-2xl overflow-hidden p-6 sm:p-8 bg-gradient-to-r from-emerald-800 via-teal-800 to-amber-700 text-white shadow-lg animate-card-slide-in">
         {/* Decorative elements */}
         <div className="absolute top-[-50%] right-[-10%] w-72 h-72 rounded-full bg-white/10 blur-xl pointer-events-none animate-float-1" />
         <div className="absolute bottom-[-30%] right-[20%] w-48 h-48 rounded-full bg-white/10 blur-lg pointer-events-none animate-float-2" />
@@ -96,44 +95,44 @@ export default function DashboardPage() {
         {/* Right Sidebar Area (1 Column) */}
         <div className="space-y-6">
           {/* Quick Actions Panel */}
-          <Card className="border-gray-100 shadow-sm bg-white rounded-2xl overflow-hidden">
-            <CardHeader className="border-b border-gray-50 pb-3">
-              <CardTitle className="text-base font-bold text-gray-800">Quick Actions</CardTitle>
+          <Card className="border-border shadow-sm bg-card rounded-2xl overflow-hidden">
+            <CardHeader className="border-b border-border pb-3">
+              <CardTitle className="text-base font-bold text-foreground">Quick Actions</CardTitle>
             </CardHeader>
             <CardContent className="pt-4 space-y-2">
               <button 
                 onClick={() => router.push("/dashboard/projects")}
-                className="w-full flex items-center justify-between p-3.5 rounded-xl text-sm font-semibold text-gray-700 bg-gray-50 hover:bg-indigo-50 hover:text-indigo-600 transition-colors border border-transparent hover:border-indigo-100/50 group"
+                className="w-full flex items-center justify-between p-3.5 rounded-xl text-sm font-semibold text-muted-foreground bg-muted hover:bg-emerald-500/10 hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors border border-transparent hover:border-emerald-500/20 group"
               >
                 <span>Manage Projects</span>
-                <ArrowUpRight className="h-4.5 w-4.5 text-gray-400 group-hover:text-indigo-600 transition-colors" />
+                <ArrowUpRight className="h-4.5 w-4.5 text-muted-foreground group-hover:text-emerald-700 transition-colors" />
               </button>
               <button 
                 onClick={() => router.push("/dashboard/reports")}
-                className="w-full flex items-center justify-between p-3.5 rounded-xl text-sm font-semibold text-gray-700 bg-gray-50 hover:bg-indigo-50 hover:text-indigo-600 transition-colors border border-transparent hover:border-indigo-100/50 group"
+                className="w-full flex items-center justify-between p-3.5 rounded-xl text-sm font-semibold text-muted-foreground bg-muted hover:bg-emerald-500/10 hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors border border-transparent hover:border-emerald-500/20 group"
               >
                 <span>View Team Reports</span>
-                <ArrowUpRight className="h-4.5 w-4.5 text-gray-400 group-hover:text-indigo-600 transition-colors" />
+                <ArrowUpRight className="h-4.5 w-4.5 text-muted-foreground group-hover:text-emerald-700 transition-colors" />
               </button>
             </CardContent>
           </Card>
 
           {/* Recent Activity Card */}
-          <Card className="border-gray-100 shadow-sm bg-white rounded-2xl">
-            <CardHeader className="pb-3 border-b border-gray-50">
-              <CardTitle className="text-base font-bold text-gray-800">Recent Submissions</CardTitle>
+          <Card className="border-border shadow-sm bg-card rounded-2xl">
+            <CardHeader className="pb-3 border-b border-border">
+              <CardTitle className="text-base font-bold text-foreground">Recent Submissions</CardTitle>
             </CardHeader>
             <CardContent className="pt-4">
               {recentActivity.length === 0 ? (
-                <p className="text-sm text-gray-400 text-center py-6 font-medium">No recent reports</p>
+                <p className="text-sm text-muted-foreground text-center py-6 font-medium">No recent reports</p>
               ) : (
                 <div className="space-y-4">
                   {recentActivity.map((a) => (
-                    <div key={a.id} className="flex items-start justify-between border-b border-gray-50 pb-3 last:border-0 last:pb-0 last:border-b-0">
+                    <div key={a.id} className="flex items-start justify-between border-b border-border pb-3 last:border-0 last:pb-0 last:border-b-0">
                       <div className="space-y-0.5">
-                        <p className="text-sm font-bold text-gray-800">{a.user.name}</p>
-                        <p className="text-xs text-gray-500 font-semibold">{a.project.name}</p>
-                        <p className="text-[10px] text-gray-400 font-bold">
+                        <p className="text-sm font-bold text-foreground">{a.user.name}</p>
+                        <p className="text-xs text-muted-foreground font-semibold">{a.project.name}</p>
+                        <p className="text-[10px] text-muted-foreground font-bold">
                           {new Date(a.weekStartDate).toLocaleDateString()} - {new Date(a.weekEndDate).toLocaleDateString()}
                         </p>
                       </div>

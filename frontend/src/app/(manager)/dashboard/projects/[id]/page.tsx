@@ -54,7 +54,6 @@ export default function ProjectDetailPage() {
   if (!project) return null
 
   const submitted = reports.filter((r) => r.status === "SUBMITTED").length
-  const draft = reports.filter((r) => r.status === "DRAFT").length
 
   return (
     <div className="space-y-6">

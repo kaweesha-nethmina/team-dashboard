@@ -4,17 +4,31 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { PieChart, Pie, Cell, Tooltip, Legend, ResponsiveContainer } from "recharts"
 import type { Workload } from "@/types"
 
-const COLORS = ["#4f46e5", "#22c55e", "#eab308", "#ef4444", "#a855f7", "#ec4899"]
+const COLORS = ["#047857", "#10b981", "#d97706", "#ef4444", "#0d9488", "#f59e0b"]
 
-const CustomTooltip = ({ active, payload }: any) => {
+interface WorkloadTooltipPayloadItem {
+  name: string
+  value: number
+  color?: string
+  payload: {
+    fill?: string
+  }
+}
+
+interface WorkloadTooltipProps {
+  active?: boolean
+  payload?: WorkloadTooltipPayloadItem[]
+}
+
+const CustomTooltip = ({ active, payload }: WorkloadTooltipProps) => {
   if (active && payload && payload.length) {
     const data = payload[0];
     return (
-      <div className="bg-white/95 backdrop-blur-sm border border-gray-100 p-3 rounded-xl shadow-xl">
+      <div className="bg-card/95 backdrop-blur-sm border border-border p-3 rounded-xl shadow-xl">
         <div className="flex items-center gap-2.5 text-xs font-semibold">
           <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: data.payload.fill || data.color }} />
-          <span className="text-gray-600">{data.name}:</span>
-          <span className="text-gray-900 ml-auto">{data.value} reports</span>
+          <span className="text-muted-foreground">{data.name}:</span>
+          <span className="text-foreground ml-auto">{data.value} reports</span>
         </div>
       </div>
     )
@@ -24,9 +38,9 @@ const CustomTooltip = ({ active, payload }: any) => {
 
 export function WorkloadChart({ data }: { data: Workload[] }) {
   return (
-    <Card className="shadow-sm hover:shadow-md transition-shadow border-gray-100 bg-white rounded-2xl">
+    <Card className="shadow-sm hover:shadow-md transition-shadow border-border bg-card rounded-2xl">
       <CardHeader className="pb-2">
-        <CardTitle className="text-lg font-bold text-gray-800">Workload by Project</CardTitle>
+        <CardTitle className="text-lg font-bold text-foreground">Workload by Project</CardTitle>
       </CardHeader>
       <CardContent>
         <div className="h-80">
@@ -50,7 +64,7 @@ export function WorkloadChart({ data }: { data: Workload[] }) {
                 ))}
               </Pie>
               <Tooltip content={<CustomTooltip />} />
-              <Legend verticalAlign="bottom" iconType="circle" iconSize={8} wrapperStyle={{ fontSize: 12, fontWeight: 500, color: '#475569', paddingTop: 10 }} />
+              <Legend verticalAlign="bottom" iconType="circle" iconSize={8} wrapperStyle={{ fontSize: 12, fontWeight: 500, color: 'hsl(var(--muted-foreground))', paddingTop: 10 }} />
             </PieChart>
           </ResponsiveContainer>
         </div>

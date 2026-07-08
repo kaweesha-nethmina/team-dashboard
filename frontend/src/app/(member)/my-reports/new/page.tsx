@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, Suspense } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import { useAuth } from "@/hooks/useAuth"
 import { api } from "@/lib/api"
@@ -8,7 +8,7 @@ import { ReportForm } from "@/components/reports/ReportForm"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import type { Project } from "@/types"
 
-export default function NewReportPage() {
+function NewReportFormContainer() {
   const { user, loading: authLoading } = useAuth()
   const router = useRouter()
   const searchParams = useSearchParams()
@@ -35,5 +35,17 @@ export default function NewReportPage() {
         <CardContent><ReportForm projects={projects} initialData={initialData} /></CardContent>
       </Card>
     </div>
+  )
+}
+
+export default function NewReportPage() {
+  return (
+    <Suspense fallback={
+      <div className="flex justify-center py-12">
+        <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full" />
+      </div>
+    }>
+      <NewReportFormContainer />
+    </Suspense>
   )
 }

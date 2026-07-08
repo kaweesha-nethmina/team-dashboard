@@ -9,7 +9,7 @@ const statusVariant: Record<string, "success" | "warning" | "secondary" | "destr
   SUBMITTED: "success", DRAFT: "warning", LATE: "destructive",
 }
 
-const statusIcon: Record<string, React.ComponentType<any>> = {
+const statusIcon: Record<string, React.ComponentType<{ className?: string }>> = {
   SUBMITTED: CheckCircle2,
   DRAFT: Clock,
   LATE: AlertTriangle,
@@ -22,11 +22,11 @@ export function ReportTable({ reports, showUser = false }: {
   const router = useRouter()
 
   return (
-    <div className="w-full overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-sm">
+    <div className="w-full overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
       <div className="overflow-x-auto">
         <table className="w-full text-sm text-left">
           <thead>
-            <tr className="border-b border-gray-100 bg-gray-50 text-xs font-bold uppercase tracking-wider text-gray-500">
+            <tr className="border-b border-border bg-muted/40 text-xs font-bold uppercase tracking-wider text-muted-foreground">
               {showUser && <th className="py-4 px-6">Team Member</th>}
               <th className="py-4 px-6">Project Name</th>
               <th className="py-4 px-6">Reporting Period</th>
@@ -35,7 +35,7 @@ export function ReportTable({ reports, showUser = false }: {
               <th className="py-4 px-6">Submitted Date</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-gray-50">
+          <tbody className="divide-y divide-border">
             {reports.map((report) => {
               const initials = report.user?.name 
                 ? report.user.name.split(" ").map((n: string) => n[0]).join("").toUpperCase().slice(0, 2) 
@@ -46,37 +46,37 @@ export function ReportTable({ reports, showUser = false }: {
               return (
                 <tr
                   key={report.id}
-                  className="hover:bg-indigo-50/20 cursor-pointer transition-colors duration-150"
+                  className="hover:bg-emerald-500/5 cursor-pointer transition-colors duration-150"
                   onClick={() => router.push(`/reports/${report.id}`)}
                 >
                   {showUser && (
                     <td className="py-4.5 px-6">
                       <div className="flex items-center gap-3">
-                        <div className="h-9 w-9 rounded-full bg-indigo-50 border border-indigo-100/60 flex items-center justify-center text-xs font-bold text-indigo-600">
+                        <div className="h-9 w-9 rounded-full bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-xs font-bold text-emerald-600 dark:text-emerald-400">
                           {initials}
                         </div>
                         <div>
-                          <p className="font-semibold text-gray-800 text-sm leading-tight">{report.user?.name}</p>
-                          <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wider mt-0.5">{report.user?.role?.toLowerCase()}</p>
+                          <p className="font-semibold text-foreground text-sm leading-tight">{report.user?.name}</p>
+                          <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-wider mt-0.5">{report.user?.role?.toLowerCase()}</p>
                         </div>
                       </div>
                     </td>
                   )}
                   <td className="py-4.5 px-6">
                     <div className="flex items-center gap-2">
-                      <FileSpreadsheet className="h-4.5 w-4.5 text-gray-400" />
-                      <span className="font-semibold text-gray-800">{report.project.name}</span>
+                      <FileSpreadsheet className="h-4.5 w-4.5 text-muted-foreground" />
+                      <span className="font-semibold text-foreground">{report.project.name}</span>
                     </div>
                   </td>
-                  <td className="py-4.5 px-6 text-gray-600 font-medium">
+                  <td className="py-4.5 px-6 text-muted-foreground font-medium">
                     <div className="flex items-center gap-2">
-                      <Calendar className="h-4 w-4 text-gray-400" />
+                      <Calendar className="h-4 w-4 text-muted-foreground" />
                       <span className="whitespace-nowrap">
                         {new Date(report.weekStartDate).toLocaleDateString()} - {new Date(report.weekEndDate).toLocaleDateString()}
                       </span>
                     </div>
                   </td>
-                  <td className="py-4.5 px-6 text-center font-bold text-gray-800">
+                  <td className="py-4.5 px-6 text-center font-bold text-foreground">
                     {report.hoursWorked ? `${report.hoursWorked} hrs` : "-"}
                   </td>
                   <td className="py-4.5 px-6">
@@ -85,9 +85,9 @@ export function ReportTable({ reports, showUser = false }: {
                       {report.status}
                     </Badge>
                   </td>
-                  <td className="py-4.5 px-6 text-gray-500 font-medium">
+                  <td className="py-4.5 px-6 text-muted-foreground font-medium">
                     {report.submittedAt ? new Date(report.submittedAt).toLocaleDateString() : (
-                      <span className="text-gray-300 font-normal">-</span>
+                      <span className="text-muted-foreground/30 font-normal">-</span>
                     )}
                   </td>
                 </tr>

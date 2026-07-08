@@ -2,51 +2,68 @@
 @tailwind components;
 @tailwind utilities;
 
-@layer base {
-  :root {
-    --background: 210 40% 98%; /* #F8FAFC */
-    --foreground: 222.2 84% 4.9%;
-    --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
-    --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
-    --primary: 243 75% 59%; /* #4F46E5 Indigo-600 */
-    --primary-foreground: 0 0% 100%;
-    --secondary: 262 83% 58%; /* #7C3AED Violet-600 */
-    --secondary-foreground: 0 0% 100%;
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 243 75% 59%;
-    --radius: 0.75rem; /* modern rounded cards */
-  }
+:root {
+  --background: 140 12% 96%; /* #F4F7F5 soft mossy slate */
+  --foreground: 222.2 84% 4.9%;
+  --card: 0 0% 100%;
+  --card-foreground: 222.2 84% 4.9%;
+  --popover: 0 0% 100%;
+  --popover-foreground: 222.2 84% 4.9%;
+  --primary: 162 84% 25%; /* #047857 Forest Emerald Green */
+  --primary-foreground: 0 0% 100%;
+  --secondary: 162 76% 41%; /* #10B981 Jade Mint Green */
+  --secondary-foreground: 0 0% 100%;
+  --muted: 140 12% 92%;
+  --muted-foreground: 215.4 16.3% 46.9%;
+  --accent: 140 12% 94%;
+  --accent-foreground: 222.2 47.4% 11.2%;
+  --destructive: 0 84.2% 60.2%;
+  --destructive-foreground: 210 40% 98%;
+  --border: 140 10% 90%;
+  --input: 140 10% 90%;
+  --ring: 162 84% 25%;
+  --radius: 0.75rem; /* modern rounded cards */
 
-  .dark {
-    --background: 222.2 84% 4.9%;
-    --foreground: 210 40% 98%;
-    --card: 222.2 84% 4.9%;
-    --card-foreground: 210 40% 98%;
-    --popover: 222.2 84% 4.9%;
-    --popover-foreground: 210 40% 98%;
-    --primary: 243 75% 70%; /* Lighter Indigo for Dark mode */
-    --primary-foreground: 222.2 47.4% 11.2%;
-    --secondary: 262 83% 70%; /* Lighter Violet for Dark mode */
-    --secondary-foreground: 210 40% 98%;
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
-    --accent: 217.2 32.6% 17.5%;
-    --accent-foreground: 210 40% 98%;
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 40% 98%;
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 243 75% 70%;
-  }
+  /* Custom theme variables for TeamDash modern side-by-side design */
+  --color-space-bg: #F4F7F5;
+  --color-card-bg: #FFFFFF;
+  --color-border: #E2E8F0;
+  --color-indigo: #047857;
+  --color-violet: #10B981;
+  --color-pink: #D97706;
+  --color-silver: #0F172A;
+  --color-gray-text: #64748B;
+}
+
+:root.dark {
+  --background: 0 0% 0%; /* pure black */
+  --foreground: 0 0% 93%;
+  --card: 0 0% 4%; /* slightly lighter than bg for card contrast */
+  --card-foreground: 0 0% 93%;
+  --popover: 0 0% 6%;
+  --popover-foreground: 0 0% 93%;
+  --primary: 162 84% 45%; /* Lighter Emerald for Dark mode */
+  --primary-foreground: 0 0% 100%;
+  --secondary: 162 76% 55%; /* Lighter Jade for Dark mode */
+  --secondary-foreground: 0 0% 100%;
+  --muted: 0 0% 8%;
+  --muted-foreground: 0 0% 60%;
+  --accent: 0 0% 10%;
+  --accent-foreground: 0 0% 93%;
+  --destructive: 0 70% 35%;
+  --destructive-foreground: 0 0% 95%;
+  --border: 0 0% 14%;
+  --input: 0 0% 14%;
+  --ring: 162 84% 45%;
+
+  --color-space-bg: #000000;
+  --color-card-bg: #0A0A0A;
+  --color-border: #222222;
+  --color-indigo: #34D399;
+  --color-violet: #6EE7B7;
+  --color-pink: #F59E0B;
+  --color-silver: #E5E5E5;
+  --color-gray-text: #A3A3A3;
 }
 
 @layer base {
@@ -58,16 +75,13 @@
   }
 }
 
-/* Custom theme variables for TeamDash modern side-by-side design */
-:root {
-  --color-space-bg: #F8FAFC;
-  --color-card-bg: #FFFFFF;
-  --color-border: #E2E8F0;
-  --color-indigo: #4F46E5;
-  --color-violet: #7C3AED;
-  --color-pink: #EC4899;
-  --color-silver: #0F172A;
-  --color-gray-text: #64748B;
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
 }
 
 /* Animations */
@@ -138,8 +152,10 @@
 
 .auth-input:focus {
   border-color: var(--color-indigo);
-  box-shadow: 0 0 10px rgba(79, 70, 229, 0.15);
+  box-shadow: 0 0 10px rgba(4, 120, 87, 0.15);
   background: #FFFFFF;
 }
+
+
 
 

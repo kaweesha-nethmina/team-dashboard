@@ -8,7 +8,7 @@ import { api } from "@/lib/api"
 import { ReportTable } from "@/components/reports/ReportTable"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
+
 import { Plus, CheckCircle, Clock, Calendar, BookmarkCheck } from "lucide-react"
 import type { Report } from "@/types"
 
@@ -52,8 +52,7 @@ export default function MyReportsPage() {
 
   return (
     <div className="space-y-6">
-      {/* Welcome Banner Card */}
-      <div className="relative rounded-2xl overflow-hidden p-6 sm:p-8 bg-gradient-to-r from-indigo-600 via-violet-600 to-pink-500 text-white shadow-lg animate-card-slide-in">
+      <div className="relative rounded-2xl overflow-hidden p-6 sm:p-8 bg-gradient-to-r from-emerald-800 via-teal-800 to-amber-700 text-white shadow-lg animate-card-slide-in">
         {/* Decorative background visual shapes */}
         <div className="absolute top-[-50%] right-[-10%] w-72 h-72 rounded-full bg-white/10 blur-xl pointer-events-none animate-float-1" />
         <div className="absolute bottom-[-30%] right-[20%] w-48 h-48 rounded-full bg-white/10 blur-lg pointer-events-none animate-float-2" />
@@ -70,7 +69,7 @@ export default function MyReportsPage() {
           </div>
           <div className="flex-shrink-0">
             <Link href="/my-reports/new">
-              <Button className="h-11 rounded-xl px-6 bg-white hover:bg-indigo-50 text-indigo-600 hover:text-indigo-700 font-extrabold shadow-md flex items-center gap-1.5 transition-all transform active:scale-95">
+              <Button className="h-11 rounded-xl px-6 bg-white hover:bg-emerald-50 text-emerald-700 hover:text-emerald-800 font-extrabold shadow-md flex items-center gap-1.5 transition-all transform active:scale-95">
                 <Plus className="h-5 w-5" /> Submit New Report
               </Button>
             </Link>
@@ -82,19 +81,19 @@ export default function MyReportsPage() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
         {/* Main Content: Reports Log List */}
         <div className="lg:col-span-2 space-y-4">
-          <div className="flex items-center justify-between border-b border-gray-100 pb-3">
+          <div className="flex items-center justify-between border-b border-border pb-3">
             <div>
-              <h2 className="text-lg font-bold text-gray-800">My Reports Log</h2>
-              <p className="text-xs text-gray-500 font-medium mt-0.5">List of your weekly reports and draft entries</p>
+              <h2 className="text-lg font-bold text-foreground">My Reports Log</h2>
+              <p className="text-xs text-muted-foreground font-medium mt-0.5">List of your weekly reports and draft entries</p>
             </div>
           </div>
           
           {reports.length === 0 ? (
-            <div className="text-center py-16 bg-white rounded-2xl border border-gray-100 shadow-sm">
-              <Calendar className="h-12 w-12 text-gray-300 mx-auto mb-2" />
-              <h3 className="font-bold text-gray-800 text-base">No Reports Logged</h3>
-              <p className="text-sm text-gray-400 mt-1 max-w-xs mx-auto">
-                You haven't logged any weekly reports yet. Click "Submit New Report" above to create your first entry.
+            <div className="text-center py-16 bg-card rounded-2xl border border-border shadow-sm">
+              <Calendar className="h-12 w-12 text-muted-foreground/30 mx-auto mb-2" />
+              <h3 className="font-bold text-foreground text-base">No Reports Logged</h3>
+              <p className="text-sm text-muted-foreground mt-1 max-w-xs mx-auto">
+                You haven&apos;t logged any weekly reports yet. Click &quot;Submit New Report&quot; above to create your first entry.
               </p>
             </div>
           ) : (
@@ -105,40 +104,40 @@ export default function MyReportsPage() {
         {/* Sidebar Content: Submission Progress / Performance Metrics */}
         <div className="space-y-6">
           {/* Workspace Quick Stats */}
-          <Card className="border-gray-100 shadow-sm bg-white rounded-2xl overflow-hidden">
-            <CardHeader className="border-b border-gray-50 pb-3">
-              <CardTitle className="text-base font-bold text-gray-800">Workspace Statistics</CardTitle>
+          <Card className="border-border shadow-sm bg-card rounded-2xl overflow-hidden">
+            <CardHeader className="border-b border-border pb-3">
+              <CardTitle className="text-base font-bold text-foreground">Workspace Statistics</CardTitle>
             </CardHeader>
             <CardContent className="pt-4 space-y-4">
               <div className="grid grid-cols-2 gap-3.5">
-                <div className="bg-gray-50 rounded-xl p-3 border border-gray-100/50">
-                  <span className="text-[10px] text-gray-400 font-extrabold uppercase tracking-wider">Submitted</span>
-                  <p className="text-xl font-black text-green-600 mt-1">{submittedCount}</p>
+                <div className="bg-muted rounded-xl p-3 border border-border">
+                  <span className="text-[10px] text-muted-foreground font-extrabold uppercase tracking-wider">Submitted</span>
+                  <p className="text-xl font-black text-green-600 dark:text-green-400 mt-1">{submittedCount}</p>
                 </div>
-                <div className="bg-gray-50 rounded-xl p-3 border border-gray-100/50">
-                  <span className="text-[10px] text-gray-400 font-extrabold uppercase tracking-wider">Drafts</span>
-                  <p className="text-xl font-black text-amber-500 mt-1">{draftCount}</p>
+                <div className="bg-muted rounded-xl p-3 border border-border">
+                  <span className="text-[10px] text-muted-foreground font-extrabold uppercase tracking-wider">Drafts</span>
+                  <p className="text-xl font-black text-amber-600 dark:text-amber-400 mt-1">{draftCount}</p>
                 </div>
-                <div className="bg-gray-50 rounded-xl p-3 border border-gray-100/50">
-                  <span className="text-[10px] text-gray-400 font-extrabold uppercase tracking-wider">Late Logs</span>
-                  <p className="text-xl font-black text-red-500 mt-1">{lateCount}</p>
+                <div className="bg-muted rounded-xl p-3 border border-border">
+                  <span className="text-[10px] text-muted-foreground font-extrabold uppercase tracking-wider">Late Logs</span>
+                  <p className="text-xl font-black text-red-600 dark:text-red-400 mt-1">{lateCount}</p>
                 </div>
-                <div className="bg-gray-50 rounded-xl p-3 border border-gray-100/50">
-                  <span className="text-[10px] text-gray-400 font-extrabold uppercase tracking-wider">Total</span>
-                  <p className="text-xl font-black text-gray-700 mt-1">{totalReports}</p>
+                <div className="bg-muted rounded-xl p-3 border border-border">
+                  <span className="text-[10px] text-muted-foreground font-extrabold uppercase tracking-wider">Total</span>
+                  <p className="text-xl font-black text-foreground mt-1">{totalReports}</p>
                 </div>
               </div>
             </CardContent>
           </Card>
 
           {/* Submission checklist guidelines */}
-          <Card className="border-gray-100 shadow-sm bg-white rounded-2xl">
-            <CardHeader className="pb-3 border-b border-gray-50">
-              <CardTitle className="text-base font-bold text-gray-800 flex items-center gap-1.5">
-                <Clock className="h-4.5 w-4.5 text-indigo-600" /> Submission Rules
+          <Card className="border-border shadow-sm bg-card rounded-2xl">
+            <CardHeader className="pb-3 border-b border-border">
+              <CardTitle className="text-base font-bold text-foreground flex items-center gap-1.5">
+                <Clock className="h-4.5 w-4.5 text-emerald-700 dark:text-emerald-500" /> Submission Rules
               </CardTitle>
             </CardHeader>
-            <CardContent className="pt-4 space-y-3.5 text-xs font-semibold text-gray-600">
+            <CardContent className="pt-4 space-y-3.5 text-xs font-semibold text-muted-foreground">
               <div className="flex items-start gap-2.5">
                 <CheckCircle className="h-4 w-4 text-green-500 flex-shrink-0 mt-0.5" />
                 <p className="leading-relaxed">Submit your report every Friday before 5:00 PM local time.</p>
