@@ -8,8 +8,22 @@ import { api } from "@/lib/api"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { ArrowLeft, FolderKanban, FileText, Plus, Calendar } from "lucide-react"
+import { ArrowLeft, FolderKanban, FileText, Plus, Pencil, Calendar } from "lucide-react"
 import type { Project, Report } from "@/types"
+
+function getCurrentWeekRange(): { weekStart: string; weekEnd: string } {
+  const now = new Date()
+  const dayOfWeek = now.getDay()
+  const diffToMonday = dayOfWeek === 0 ? 6 : dayOfWeek - 1
+  const monday = new Date(now)
+  monday.setDate(now.getDate() - diffToMonday)
+  const sunday = new Date(monday)
+  sunday.setDate(monday.getDate() + 6)
+  return {
+    weekStart: monday.toISOString().slice(0, 10),
+    weekEnd: sunday.toISOString().slice(0, 10),
+  }
+}
 
 export default function MemberProjectDetailPage() {
   const { user, loading: authLoading } = useAuth()
@@ -17,7 +31,8 @@ export default function MemberProjectDetailPage() {
   const params = useParams()
   const [project, setProject] = useState<Project | null>(null)
   const [reports, setReports] = useState<Report[]>([])
-  const [loading, setLoading] = useState(true)
+  const [, setLoading] = useState(true)
+  const { weekStart } = getCurrentWeekRange()
 
   useEffect(() => {
     if (authLoading) return
@@ -25,6 +40,10 @@ export default function MemberProjectDetailPage() {
     if (user.role === "MANAGER") { router.push("/dashboard"); return }
     loadData()
   }, [user, authLoading])
+
+  if (authLoading) {
+    return <div className="flex justify-center py-12"><div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full" /></div>
+  }
 
   const loadData = async () => {
     try {
@@ -43,14 +62,14 @@ export default function MemberProjectDetailPage() {
     }
   }
 
-  if (authLoading || loading) {
-    return <div className="flex justify-center py-12"><div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full" /></div>
-  }
-
   if (!project) return null
 
-  const submitted = reports.filter((r) => r.status === "SUBMITTED").length
-  const draft = reports.filter((r) => r.status === "DRAFT").length
+  // Filter reports to current week for summary counts
+  const weekReports = reports.filter((r) =>
+    r.weekStartDate?.slice(0, 10) === weekStart
+  )
+  const submitted = weekReports.filter((r) => r.status === "SUBMITTED").length
+  const draft = weekReports.filter((r) => r.status === "DRAFT").length
 
   return (
     <div className="space-y-6">
@@ -67,17 +86,30 @@ export default function MemberProjectDetailPage() {
             {project.description && <p className="text-muted-foreground mt-1">{project.description}</p>}
           </div>
         </div>
-        <Button asChild>
-          <Link href={`/my-reports/new?projectId=${project.id}`}>
-            <Plus className="h-4 w-4 mr-2" /> New Report
-          </Link>
-        </Button>
+        {(() => {
+          const weekDraft = weekReports.find((r) => r.status === "DRAFT")
+          const weekSubmitted = weekReports.find((r) => r.status === "SUBMITTED")
+          const editId = weekDraft?.id || weekSubmitted?.id
+          return editId ? (
+            <Button asChild>
+              <Link href={`/my-reports/${editId}/edit`}>
+                <Pencil className="h-4 w-4 mr-2" /> {weekSubmitted ? "View This Week" : "Edit This Week"}
+              </Link>
+            </Button>
+          ) : (
+            <Button asChild>
+              <Link href={`/my-reports/new?projectId=${project.id}`}>
+                <Plus className="h-4 w-4 mr-2" /> New Report
+              </Link>
+            </Button>
+          )
+        })()}
       </div>
 
       <div className="grid gap-4 md:grid-cols-3">
         <Card>
-          <CardHeader className="pb-2"><CardTitle className="text-sm font-medium text-muted-foreground">My Reports</CardTitle></CardHeader>
-          <CardContent><p className="text-2xl font-bold">{reports.length}</p></CardContent>
+          <CardHeader className="pb-2"><CardTitle className="text-sm font-medium text-muted-foreground">This Week Reports</CardTitle></CardHeader>
+          <CardContent><p className="text-2xl font-bold">{weekReports.length}</p></CardContent>
         </Card>
         <Card>
           <CardHeader className="pb-2"><CardTitle className="text-sm font-medium text-muted-foreground">Submitted</CardTitle></CardHeader>

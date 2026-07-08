@@ -1,32 +1,61 @@
 import prisma from "../../config/prisma";
+import { createClient } from "@supabase/supabase-js";
+
+const supabaseUrl = process.env.SUPABASE_URL || "";
+const supabaseKey = process.env.SUPABASE_SECRET_KEY || "";
+const supabase = createClient(supabaseUrl, supabaseKey);
+
+function getCurrentWeekRange(): { weekStart: string; weekEnd: string } {
+  const now = new Date();
+  const dayOfWeek = now.getDay();
+  const diffToMonday = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
+  const monday = new Date(now);
+  monday.setDate(now.getDate() - diffToMonday);
+  monday.setHours(0, 0, 0, 0);
+  const sunday = new Date(monday);
+  sunday.setDate(monday.getDate() + 6);
+  sunday.setHours(23, 59, 59, 999);
+  return { weekStart: monday.toISOString(), weekEnd: sunday.toISOString() };
+}
 
 export class ProjectsService {
   async getAll(userId?: string, assignedOnly = false) {
+    let projectIds: string[] | undefined;
+
     if (assignedOnly && userId) {
       const assignments = await prisma.projectAssignment.findMany({
         where: { userId },
         select: { projectId: true },
       });
-      const projectIds = assignments.map((a) => a.projectId);
+      projectIds = assignments.map((a) => a.projectId);
       if (projectIds.length === 0) return [];
-
-      return prisma.project.findMany({
-        where: { id: { in: projectIds } },
-        include: {
-          createdBy: { select: { id: true, name: true } },
-          _count: { select: { reports: true } },
-        },
-        orderBy: { createdAt: "desc" },
-      });
     }
 
-    return prisma.project.findMany({
+    const where = projectIds ? { id: { in: projectIds } } : undefined;
+
+    const projects = await prisma.project.findMany({
+      where,
       include: {
         createdBy: { select: { id: true, name: true } },
-        _count: { select: { reports: true } },
       },
       orderBy: { createdAt: "desc" },
     });
+
+    const { weekStart, weekEnd } = getCurrentWeekRange();
+    const { data: allReports } = await supabase
+      .from("reports")
+      .select("projectId")
+      .gte("weekStartDate", weekStart)
+      .lte("weekStartDate", weekEnd);
+    const reportCounts: Record<string, number> = {};
+    for (const r of allReports || []) {
+      reportCounts[r.projectId] = (reportCounts[r.projectId] || 0) + 1;
+    }
+
+    return projects.map((p: any) => ({
+      ...p,
+      _count: { reports: reportCounts[p.id] || 0 },
+    }));
   }
 
   async create(name: string, description: string | undefined, createdById: string) {
@@ -84,11 +113,19 @@ export class ProjectsService {
       where: { id },
       include: {
         createdBy: { select: { id: true, name: true } },
-        _count: { select: { reports: true } },
       },
     });
     if (!project) throw new Error("Project not found");
-    return project;
+
+    const { weekStart, weekEnd } = getCurrentWeekRange();
+    const { count } = await supabase
+      .from("reports")
+      .select("*", { count: "exact", head: true })
+      .eq("projectId", id)
+      .gte("weekStartDate", weekStart)
+      .lte("weekStartDate", weekEnd);
+
+    return { ...project, _count: { reports: count || 0 } };
   }
 
   async getProjectMembers(projectId: string) {

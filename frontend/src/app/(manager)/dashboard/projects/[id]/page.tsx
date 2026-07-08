@@ -12,6 +12,15 @@ import { ReportTable } from "@/components/reports/ReportTable"
 import { ArrowLeft, FolderKanban, Users, Calendar, FileText } from "lucide-react"
 import type { Project, Report, User } from "@/types"
 
+function getCurrentWeekStart(): string {
+  const now = new Date()
+  const dayOfWeek = now.getDay()
+  const diffToMonday = dayOfWeek === 0 ? 6 : dayOfWeek - 1
+  const monday = new Date(now)
+  monday.setDate(now.getDate() - diffToMonday)
+  return monday.toISOString().slice(0, 10)
+}
+
 export default function ProjectDetailPage() {
   const { user, loading: authLoading } = useAuth()
   const router = useRouter()
@@ -20,6 +29,7 @@ export default function ProjectDetailPage() {
   const [members, setMembers] = useState<User[]>([])
   const [reports, setReports] = useState<Report[]>([])
   const [loading, setLoading] = useState(true)
+  const currentWeekStart = getCurrentWeekStart()
 
   useEffect(() => {
     if (authLoading) return
@@ -53,7 +63,11 @@ export default function ProjectDetailPage() {
 
   if (!project) return null
 
-  const submitted = reports.filter((r) => r.status === "SUBMITTED").length
+  // Filter to current week for summary counts
+  const weekReports = reports.filter((r) =>
+    r.weekStartDate?.slice(0, 10) === currentWeekStart
+  )
+  const submitted = weekReports.filter((r) => r.status === "SUBMITTED").length
 
   return (
     <div className="space-y-6">
@@ -76,12 +90,12 @@ export default function ProjectDetailPage() {
           <CardContent><p className="text-2xl font-bold">{members.length}</p></CardContent>
         </Card>
         <Card>
-          <CardHeader className="pb-2"><CardTitle className="text-sm font-medium text-muted-foreground">Total Reports</CardTitle></CardHeader>
-          <CardContent><p className="text-2xl font-bold">{reports.length}</p></CardContent>
+          <CardHeader className="pb-2"><CardTitle className="text-sm font-medium text-muted-foreground">This Week Reports</CardTitle></CardHeader>
+          <CardContent><p className="text-2xl font-bold">{weekReports.length}</p></CardContent>
         </Card>
         <Card>
           <CardHeader className="pb-2"><CardTitle className="text-sm font-medium text-muted-foreground">Submitted</CardTitle></CardHeader>
-          <CardContent><p className="text-2xl font-bold text-green-600">{submitted}<span className="text-sm text-muted-foreground font-normal"> / {reports.length}</span></p></CardContent>
+          <CardContent><p className="text-2xl font-bold text-green-600">{submitted}<span className="text-sm text-muted-foreground font-normal"> / {weekReports.length}</span></p></CardContent>
         </Card>
       </div>
 

@@ -62,7 +62,7 @@ export default function DashboardPage() {
 
   return (
     <div className="space-y-6">
-      <div className="relative rounded-2xl overflow-hidden p-6 sm:p-8 bg-gradient-to-r from-emerald-800 via-teal-800 to-amber-700 text-white shadow-lg animate-card-slide-in">
+      <div className="relative rounded-2xl overflow-hidden p-6 sm:p-8 bg-gradient-to-r from-emerald-800 via-teal-800 to-amber-700 dark:from-emerald-950 dark:via-teal-950 dark:to-amber-950 text-white shadow-lg animate-card-slide-in">
         {/* Decorative elements */}
         <div className="absolute top-[-50%] right-[-10%] w-72 h-72 rounded-full bg-white/10 blur-xl pointer-events-none animate-float-1" />
         <div className="absolute bottom-[-30%] right-[20%] w-48 h-48 rounded-full bg-white/10 blur-lg pointer-events-none animate-float-2" />

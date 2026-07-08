@@ -9,8 +9,17 @@ import { ReportTable } from "@/components/reports/ReportTable"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 
-import { Plus, CheckCircle, Clock, Calendar, BookmarkCheck } from "lucide-react"
+import { Plus, Pencil, CheckCircle, Clock, Calendar, BookmarkCheck } from "lucide-react"
 import type { Report } from "@/types"
+
+function getCurrentWeekStart(): string {
+  const now = new Date()
+  const dayOfWeek = now.getDay()
+  const diffToMonday = dayOfWeek === 0 ? 6 : dayOfWeek - 1
+  const monday = new Date(now)
+  monday.setDate(now.getDate() - diffToMonday)
+  return monday.toISOString().slice(0, 10)
+}
 
 export default function MyReportsPage() {
   const { user, loading: authLoading } = useAuth()
@@ -50,9 +59,15 @@ export default function MyReportsPage() {
   const draftCount = reports.filter((r) => r.status === "DRAFT").length
   const lateCount = reports.filter((r) => r.status === "LATE").length
 
+  // Check if user already has a report for the current week
+  const currentWeekStart = getCurrentWeekStart()
+  const currentWeekReport = reports.find((r) =>
+    r.weekStartDate?.slice(0, 10) === currentWeekStart
+  )
+
   return (
     <div className="space-y-6">
-      <div className="relative rounded-2xl overflow-hidden p-6 sm:p-8 bg-gradient-to-r from-emerald-800 via-teal-800 to-amber-700 text-white shadow-lg animate-card-slide-in">
+      <div className="relative rounded-2xl overflow-hidden p-6 sm:p-8 bg-gradient-to-r from-emerald-800 via-teal-800 to-amber-700 dark:from-emerald-950 dark:via-teal-950 dark:to-amber-950 text-white shadow-lg animate-card-slide-in">
         {/* Decorative background visual shapes */}
         <div className="absolute top-[-50%] right-[-10%] w-72 h-72 rounded-full bg-white/10 blur-xl pointer-events-none animate-float-1" />
         <div className="absolute bottom-[-30%] right-[20%] w-48 h-48 rounded-full bg-white/10 blur-lg pointer-events-none animate-float-2" />
@@ -68,11 +83,19 @@ export default function MyReportsPage() {
             </p>
           </div>
           <div className="flex-shrink-0">
-            <Link href="/my-reports/new">
-              <Button className="h-11 rounded-xl px-6 bg-white hover:bg-emerald-50 text-emerald-700 hover:text-emerald-800 font-extrabold shadow-md flex items-center gap-1.5 transition-all transform active:scale-95">
-                <Plus className="h-5 w-5" /> Submit New Report
-              </Button>
-            </Link>
+            {currentWeekReport ? (
+              <Link href={`/my-reports/${currentWeekReport.id}/edit`}>
+                <Button className="h-11 rounded-xl px-6 bg-white hover:bg-emerald-50 text-emerald-700 hover:text-emerald-800 font-extrabold shadow-md flex items-center gap-1.5 transition-all transform active:scale-95">
+                  <Pencil className="h-5 w-5" /> {currentWeekReport.status === "SUBMITTED" ? "View This Week" : "Edit This Week"}
+                </Button>
+              </Link>
+            ) : (
+              <Link href="/my-reports/new">
+                <Button className="h-11 rounded-xl px-6 bg-white hover:bg-emerald-50 text-emerald-700 hover:text-emerald-800 font-extrabold shadow-md flex items-center gap-1.5 transition-all transform active:scale-95">
+                  <Plus className="h-5 w-5" /> Submit New Report
+                </Button>
+              </Link>
+            )}
           </div>
         </div>
       </div>

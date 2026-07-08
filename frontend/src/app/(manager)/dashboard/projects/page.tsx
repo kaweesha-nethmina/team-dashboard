@@ -208,7 +208,7 @@ export default function ProjectsPage() {
       ) : (
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
           {filteredProjects.map((project) => (
-            <Card key={project.id} className="transition-all duration-300 hover:-translate-y-1 hover:shadow-lg border-border hover:border-emerald-500/30 bg-card rounded-2xl flex flex-col justify-between overflow-hidden">
+            <Card key={project.id} className="cursor-pointer transition-all duration-300 hover:-translate-y-1 hover:shadow-lg border-border hover:border-emerald-500/30 bg-card rounded-2xl flex flex-col justify-between overflow-hidden" onClick={() => router.push(`/dashboard/projects/${project.id}`)}>
               <CardHeader className="flex flex-row items-start justify-between space-y-0 pb-3">
                 <div className="flex items-center gap-3">
                   <div className="p-2.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20">
@@ -221,7 +221,7 @@ export default function ProjectsPage() {
                     )}
                   </div>
                 </div>
-                <div className="flex gap-0.5">
+                <div className="flex gap-0.5" onClick={(e) => e.stopPropagation()}>
                   <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-foreground rounded-lg" onClick={() => openEdit(project)}>
                     <Edit2 className="h-4 w-4" />
                   </Button>
@@ -243,7 +243,7 @@ export default function ProjectsPage() {
                     <span className="text-[10px] text-muted-foreground font-bold uppercase tracking-wider">Total Submissions</span>
                   </div>
 
-                  <Button variant="outline" size="sm" className="h-8 rounded-lg text-xs font-bold border-border hover:bg-emerald-500/10 hover:text-emerald-600 dark:hover:text-emerald-400 hover:border-emerald-500/20 transition-all" onClick={() => openMembers(project)}>
+                  <Button variant="outline" size="sm" className="h-8 rounded-lg text-xs font-bold border-border hover:bg-emerald-500/10 hover:text-emerald-600 dark:hover:text-emerald-400 hover:border-emerald-500/20 transition-all" onClick={(e) => { e.stopPropagation(); openMembers(project) }}>
                     <Users className="h-3.5 w-3.5 mr-1.5" /> Members
                   </Button>
                 </div>

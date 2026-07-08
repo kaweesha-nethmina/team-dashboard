@@ -1,5 +1,20 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
+const mockSupabase = vi.hoisted(() => {
+  const chain: any = {};
+  const builder = () => {
+    const r = Promise.resolve({ data: [], error: null });
+    const c: any = { select: () => c, eq: () => c, in: () => c, order: () => c, limit: () => c, range: () => c, or: () => c, neq: () => c, gte: () => c, lte: () => c, single: () => r, then: r.then.bind(r) };
+    Object.assign(chain, c);
+    return chain;
+  };
+  return { from: vi.fn(() => builder()), builder };
+});
+
+vi.mock("@supabase/supabase-js", () => ({
+  createClient: vi.fn(() => ({ from: mockSupabase.from })),
+}));
+
 vi.mock("../../config/prisma", () => ({
   default: {
     report: {
@@ -48,8 +63,8 @@ describe("ReportsService", () => {
   describe("getMyReports", () => {
     it("should return user's reports", async () => {
       vi.mocked(prisma.report.findMany)
-        .mockResolvedValueOnce([]) // markLateReports — no late reports
-        .mockResolvedValueOnce([mockReport]); // actual query
+        .mockResolvedValueOnce([])
+        .mockResolvedValueOnce([mockReport]);
 
       const result = await reportsService.getMyReports("user-1");
 
@@ -94,6 +109,7 @@ describe("ReportsService", () => {
 
   describe("createReport", () => {
     it("should create a report", async () => {
+      vi.mocked(prisma.report.findMany).mockResolvedValue([]);
       vi.mocked(prisma.report.create).mockResolvedValue(mockReport);
 
       const result = await reportsService.createReport("user-1", {
@@ -104,6 +120,7 @@ describe("ReportsService", () => {
         tasksPlanned: "Task 3\nTask 4",
       });
 
+      expect(prisma.report.findMany).toHaveBeenCalled();
       expect(prisma.report.create).toHaveBeenCalledWith(
         expect.objectContaining({
           data: expect.objectContaining({
@@ -116,7 +133,20 @@ describe("ReportsService", () => {
       expect(result.tasksCompleted).toBe("Task 1\nTask 2");
     });
 
+    it("should throw when report already exists for that week", async () => {
+      vi.mocked(prisma.report.findMany).mockResolvedValue([{ id: "existing-report" }]);
+
+      await expect(reportsService.createReport("user-1", {
+        projectId: "proj-1",
+        weekStartDate: "2026-06-29",
+        weekEndDate: "2026-07-03",
+        tasksCompleted: "Task 1",
+        tasksPlanned: "Task 2",
+      })).rejects.toThrow("You already have a report for this week");
+    });
+
     it("should create with optional fields", async () => {
+      vi.mocked(prisma.report.findMany).mockResolvedValue([]);
       vi.mocked(prisma.report.create).mockResolvedValue(mockReport);
 
       await reportsService.createReport("user-1", {
@@ -233,8 +263,7 @@ describe("ReportsService", () => {
 
   describe("getReportById", () => {
     it("should return a report by id", async () => {
-      vi.mocked(prisma.report.findMany)
-        .mockResolvedValueOnce([]);
+      vi.mocked(prisma.report.findMany).mockResolvedValue([]);
       vi.mocked(prisma.report.findUnique).mockResolvedValue(mockReport);
 
       const result = await reportsService.getReportById("report-1");
@@ -250,8 +279,7 @@ describe("ReportsService", () => {
     });
 
     it("should return null when not found", async () => {
-      vi.mocked(prisma.report.findMany)
-        .mockResolvedValueOnce([]);
+      vi.mocked(prisma.report.findMany).mockResolvedValue([]);
       vi.mocked(prisma.report.findUnique).mockResolvedValue(null);
 
       const result = await reportsService.getReportById("nonexistent");
@@ -262,28 +290,24 @@ describe("ReportsService", () => {
 
   describe("getSubmissionStatus", () => {
     it("should return submission status for all members", async () => {
-      vi.mocked(prisma.report.findMany)
-        .mockResolvedValueOnce([]); // markLateReports
+      vi.mocked(prisma.report.findMany).mockResolvedValue([]);
       vi.mocked(prisma.user.findMany).mockResolvedValue([
-        {
-          id: "user-1",
-          name: "Test User",
-          email: "test@example.com",
-          reports: [{ status: "SUBMITTED", weekEndDate: new Date(), submittedAt: new Date() }],
-        },
-        {
-          id: "user-2",
-          name: "Another User",
-          email: "another@example.com",
-          reports: [{ status: "DRAFT", weekEndDate: new Date(), submittedAt: null }],
-        },
+        { id: "user-1", name: "Test User", email: "test@example.com" },
+        { id: "user-2", name: "Another User", email: "another@example.com" },
       ]);
 
-      const result = await reportsService.getSubmissionStatus();
+      const reportData = [
+        { userId: "user-1", status: "SUBMITTED", weekStartDate: "2026-07-06", weekEndDate: "2026-07-12", submittedAt: new Date().toISOString() },
+      ];
+      const result = Promise.resolve({ data: reportData, error: null });
+      const chain: any = { select: () => chain, gte: () => chain, lte: () => chain, then: result.then.bind(result) };
+      mockSupabase.from.mockReturnValue(chain);
 
-      expect(result).toHaveLength(2);
-      expect(result[0].isCompliant).toBe(true);
-      expect(result[1].isCompliant).toBe(false);
+      const status = await reportsService.getSubmissionStatus();
+
+      expect(status).toHaveLength(2);
+      expect(status[0].isCompliant).toBe(true);
+      expect(status[1].isCompliant).toBe(false);
     });
   });
 });

@@ -1,4 +1,24 @@
 import prisma from "../../config/prisma";
+import { createClient } from "@supabase/supabase-js";
+
+const supabaseUrl = process.env.SUPABASE_URL || "";
+const supabaseKey = process.env.SUPABASE_SECRET_KEY || "";
+const supabase = createClient(supabaseUrl, supabaseKey);
+
+function getCurrentWeekRange(): { weekStart: Date; weekEnd: Date } {
+  const now = new Date();
+  const dayOfWeek = now.getDay();
+  const diffToMonday = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
+  const monday = new Date(now);
+  monday.setDate(now.getDate() - diffToMonday);
+  monday.setHours(0, 0, 0, 0);
+
+  const sunday = new Date(monday);
+  sunday.setDate(monday.getDate() + 6);
+  sunday.setHours(23, 59, 59, 999);
+
+  return { weekStart: monday, weekEnd: sunday };
+}
 
 export class ReportsService {
   private async markLateReports(): Promise<void> {
@@ -40,11 +60,23 @@ export class ReportsService {
     hoursWorked?: number;
     notes?: string;
   }) {
+    const weekStart = new Date(data.weekStartDate);
+    weekStart.setHours(0, 0, 0, 0);
+
+    const existing = await prisma.report.findMany({
+      where: { userId, weekStartDate: { gte: weekStart, lt: new Date(weekStart.getTime() + 7 * 24 * 60 * 60 * 1000) } },
+      select: { id: true },
+    });
+
+    if (existing.length > 0) {
+      throw new Error("You already have a report for this week. Edit the existing report instead.");
+    }
+
     return prisma.report.create({
       data: {
         userId,
         projectId: data.projectId,
-        weekStartDate: new Date(data.weekStartDate),
+        weekStartDate: weekStart,
         weekEndDate: new Date(data.weekEndDate),
         tasksCompleted: data.tasksCompleted,
         tasksPlanned: data.tasksPlanned,
@@ -132,27 +164,29 @@ export class ReportsService {
 
   async getSubmissionStatus() {
     await this.markLateReports();
+    const { weekStart, weekEnd } = getCurrentWeekRange();
+
+    const { data: reports } = await supabase
+      .from("reports")
+      .select("userId, status, weekStartDate, weekEndDate, submittedAt")
+      .gte("weekStartDate", weekStart.toISOString())
+      .lte("weekStartDate", weekEnd.toISOString());
+
     const users = await prisma.user.findMany({
       where: { role: "MEMBER" },
-      select: {
-        id: true,
-        name: true,
-        email: true,
-        reports: {
-          orderBy: { weekStartDate: "desc" },
-          take: 1,
-          select: { status: true, weekEndDate: true, submittedAt: true },
-        },
-      },
+      select: { id: true, name: true, email: true },
     });
 
-    return users.map((u) => ({
-      userId: u.id,
-      name: u.name,
-      email: u.email,
-      latestReport: u.reports[0] || null,
-      isCompliant: u.reports[0]?.status === "SUBMITTED",
-    }));
+    return users.map((u) => {
+      const weekReport = (reports || []).find((r: any) => r.userId === u.id);
+      return {
+        userId: u.id,
+        name: u.name,
+        email: u.email,
+        latestReport: weekReport || null,
+        isCompliant: weekReport?.status === "SUBMITTED",
+      };
+    });
   }
 }
 

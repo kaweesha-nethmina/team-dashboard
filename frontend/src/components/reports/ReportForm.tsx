@@ -15,6 +15,20 @@ function splitItems(val?: string): string[] {
   return val ? val.split("\n").filter((s) => s.trim()) : []
 }
 
+function getCurrentWeekDates(): { weekStart: string; weekEnd: string } {
+  const now = new Date()
+  const dayOfWeek = now.getDay()
+  const diffToMonday = dayOfWeek === 0 ? 6 : dayOfWeek - 1
+  const monday = new Date(now)
+  monday.setDate(now.getDate() - diffToMonday)
+  const sunday = new Date(monday)
+  sunday.setDate(monday.getDate() + 6)
+  return {
+    weekStart: monday.toISOString().slice(0, 10),
+    weekEnd: sunday.toISOString().slice(0, 10),
+  }
+}
+
 export function ReportForm({ projects, initialData, onSuccess }: {
   projects: Project[]
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -22,12 +36,13 @@ export function ReportForm({ projects, initialData, onSuccess }: {
   onSuccess?: () => void
 }) {
   const router = useRouter()
+  const { weekStart, weekEnd } = getCurrentWeekDates()
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState("")
   const [formData, setFormData] = useState({
     projectId: initialData?.projectId || "",
-    weekStartDate: initialData?.weekStartDate?.slice(0, 10) || "",
-    weekEndDate: initialData?.weekEndDate?.slice(0, 10) || "",
+    weekStartDate: initialData?.weekStartDate?.slice(0, 10) || weekStart,
+    weekEndDate: initialData?.weekEndDate?.slice(0, 10) || weekEnd,
     tasksCompleted: splitItems(initialData?.tasksCompleted),
     tasksPlanned: splitItems(initialData?.tasksPlanned),
     blockers: splitItems(initialData?.blockers),

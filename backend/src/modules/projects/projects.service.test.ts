@@ -1,5 +1,29 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
+let supabaseResult: any = { data: [], error: null, count: 0 };
+
+const mockSupabase = vi.hoisted(() => {
+  const chain: any = {
+    select: () => chain,
+    eq: () => chain,
+    in: () => chain,
+    order: () => chain,
+    limit: () => chain,
+    range: () => chain,
+    or: () => chain,
+    neq: () => chain,
+    gte: () => chain,
+    lte: () => chain,
+    single: () => Promise.resolve(supabaseResult),
+    then: (onfulfilled: any) => Promise.resolve(supabaseResult).then(onfulfilled),
+  };
+  return { from: vi.fn(() => chain) };
+});
+
+vi.mock("@supabase/supabase-js", () => ({
+  createClient: vi.fn(() => mockSupabase),
+}));
+
 vi.mock("../../config/prisma", () => ({
   default: {
     project: {
@@ -51,6 +75,7 @@ describe("ProjectsService", () => {
   describe("getAll", () => {
     it("should return all projects", async () => {
       vi.mocked(prisma.project.findMany).mockResolvedValue([mockProject]);
+      supabaseResult = { data: [{ projectId: "proj-1" }, { projectId: "proj-1" }, { projectId: "proj-1" }], error: null };
 
       const result = await projectsService.getAll();
 
@@ -60,6 +85,7 @@ describe("ProjectsService", () => {
         })
       );
       expect(result).toHaveLength(1);
+      expect(result[0]._count.reports).toBe(3);
     });
 
     it("should return assigned-only projects", async () => {
@@ -67,6 +93,7 @@ describe("ProjectsService", () => {
         { projectId: "proj-1", userId: "member-1" },
       ]);
       vi.mocked(prisma.project.findMany).mockResolvedValue([mockProject]);
+      supabaseResult = { data: [{ projectId: "proj-1" }, { projectId: "proj-1" }], error: null };
 
       const result = await projectsService.getAll("member-1", true);
 
@@ -80,6 +107,7 @@ describe("ProjectsService", () => {
         })
       );
       expect(result).toHaveLength(1);
+      expect(result[0]._count.reports).toBe(2);
     });
 
     it("should return empty array when no assignments", async () => {
@@ -196,11 +224,13 @@ describe("ProjectsService", () => {
   describe("getById", () => {
     it("should return project by id", async () => {
       vi.mocked(prisma.project.findUnique).mockResolvedValue(mockProject);
+      supabaseResult = { data: null, error: null, count: 5 };
 
       const result = await projectsService.getById("proj-1");
 
       expect(result.id).toBe("proj-1");
       expect(result.name).toBe("Frontend Redesign");
+      expect(result._count.reports).toBe(5);
     });
 
     it("should throw when not found", async () => {
