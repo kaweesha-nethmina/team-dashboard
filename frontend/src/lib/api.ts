@@ -80,8 +80,10 @@ export const api = {
     getTasksByProject: () => request<any[]>("/dashboard/tasks-by-project"),
   },
   ai: {
-    ask: (question: string) =>
-      request<{ answer: string; context: string }>("/ai/ask", { method: "POST", body: JSON.stringify({ question }) }),
+    ask: (question: string, projectId?: string) =>
+      request<{ answer: string; context: string; requiresProjectSelection: boolean; projects: { id: string; name: string }[] }>(
+        "/ai/ask", { method: "POST", body: JSON.stringify({ question, projectId }) }
+      ),
     summary: (params?: { projectId?: string; startDate?: string; endDate?: string }) => {
       const query = params ? "?" + new URLSearchParams(params as any).toString() : ""
       return request<{ summary: string; context: string }>(`/ai/summary${query}`)
