@@ -6,16 +6,18 @@ A full-stack team management application for generating weekly reports and track
 
 - **Backend**: Express 4 + TypeScript + Supabase (PostgreSQL) + Zod
 - **Frontend**: Next.js 14 + React 18 + Tailwind CSS + shadcn/ui + Recharts
-- **AI**: Anthropic Claude integration for report analysis
+- **AI**: Google Gemini 2.0 Flash integration for report analysis (with local fallback)
 - **Auth**: JWT with httpOnly cookies, bcrypt, RBAC (MEMBER/MANAGER)
 - **Database**: PostgreSQL via Supabase (service_role key for server-side access)
 
 ## Features
 
 - Weekly report creation, editing, submission, and tracking
+- One report per member per week enforced (unique + UI guard)
 - Role-based access control (Members submit reports, Managers view dashboards)
 - Dashboard with charts (report trends, submission status, workload distribution)
-- AI-powered assistant for report and blocker analysis
+- AI-powered assistant for report, blocker, and project analysis
+- Project-aware AI chat with clickable project selection buttons
 - Project management with member assignments
 - Filterable team reports view
 - Pagination on report listing endpoints
@@ -44,7 +46,7 @@ TeamDash/
 │   │       ├── reports/    # CRUD, submit, filter, pagination
 │   │       ├── projects/   # CRUD, member assignment
 │   │       ├── dashboard/  # aggregation endpoints (summary, trends, workload, etc.)
-│   │       └── ai/         # Claude integration (Q&A + summary)
+│   │       └── ai/         # Gemini integration (Q&A + summary with project-aware chat)
 │   ├── migrations/         # SQL migration (run in Supabase SQL Editor)
 │   └── package.json
 ├── frontend/
@@ -64,14 +66,14 @@ TeamDash/
 
 - Node.js 18+
 - Supabase project (free tier)
-- Anthropic API key (optional, for AI features)
+- Google Gemini API key (optional, for AI features, get one at https://aistudio.google.com/apikey)
 
 ### Database Setup
 
 1. Create a Supabase project at [supabase.com](https://supabase.com)
 2. Go to **SQL Editor** in your Supabase dashboard
-3. Open and paste the contents of `backend/migrations/001_initial_schema.sql`
-4. Click **Run** to create the tables
+3. Open and paste `backend/migrations/001_initial_schema.sql`, then click **Run**
+4. Open and paste `backend/migrations/002_weekly_report_unique.sql`, then click **Run**
 
 ### Backend Setup
 
@@ -105,7 +107,7 @@ npm run dev
 | `JWT_SECRET` | JWT signing secret | **Yes** |
 | `JWT_EXPIRES_IN` | Token expiration | No (default: 7d) |
 | `FRONTEND_URL` | Frontend origin for CORS | No (default: http://localhost:3000) |
-| `ANTHROPIC_API_KEY` | Claude API key (optional) | No |
+| `GEMINI_API_KEY` | Google Gemini API key (optional — local fallback if missing) | No |
 
 **Frontend** (`frontend/.env.local`):
 
@@ -153,28 +155,35 @@ All endpoints are prefixed with `/auth`, `/reports`, `/projects`, `/dashboard`, 
 | POST | `/auth/logout` | Authenticated | Clear session |
 | GET | `/auth/me` | Authenticated | Current user profile |
 | GET | `/reports/me` | Member | Own report history |
-| POST | `/reports` | Member | Create report |
+| POST | `/reports` | Member | Create report (one per week enforced) |
 | PUT | `/reports/:id` | Member (own) | Edit draft report |
 | POST | `/reports/:id/submit` | Member (own) | Submit report |
 | GET | `/reports` | Manager | All reports (filterable + paginated) |
-| GET | `/reports/status` | Manager | Submission compliance |
+| GET | `/reports/status` | Manager | Current week submission compliance |
 | GET | `/reports/:id` | Authenticated | Single report detail |
-| GET | `/projects` | Authenticated | List projects |
+| GET | `/projects` | Authenticated | List projects (week-based report counts) |
 | POST | `/projects` | Manager | Create project |
 | PUT | `/projects/:id` | Manager | Update project |
 | DELETE | `/projects/:id` | Manager | Delete project |
-| GET | `/dashboard/summary` | Manager | KPI summary |
-| GET | `/dashboard/trends` | Manager | Weekly trend data |
-| GET | `/dashboard/workload` | Manager | Workload distribution |
-| GET | `/dashboard/member-status` | Manager | Per-member stats |
+| GET | `/dashboard/summary` | Manager | Current week KPI summary |
+| GET | `/dashboard/trends` | Manager | Weekly trend data (all weeks) |
+| GET | `/dashboard/workload` | Manager | Current week workload distribution |
+| GET | `/dashboard/member-status` | Manager | Current week per-member stats |
 | GET | `/dashboard/recent-activity` | Manager | Recent submissions |
-| POST | `/ai/ask` | Manager | Natural-language Q&A |
+| POST | `/ai/ask` | Manager | AI Q&A (body: `{ question, projectId? }`) |
 | GET | `/ai/summary` | Manager | AI team summary |
 
+### AI Ask Flow
 
-# test
-Tests (47 passing)
+When you call `POST /ai/ask`:
+- If `projectId` is omitted and the question is project-related, the API returns `requiresProjectSelection: true` with a list of projects.
+- Pass the selected `projectId` to get a project-scoped answer.
+- If Gemini quota is exceeded, the API falls back to a local data summary (keyword-matched stats).
+
+
+# Tests
+Tests (48 passing)
 - Auth tests (10) — register, login, getMe, getMembers with validation errors
-- Reports tests (16) — CRUD, submit, filter, pagination, ownership checks, submission status
+- Reports tests (17) — CRUD, submit, filter, pagination, ownership checks, submission status, duplicate week guard
 - Projects tests (13) — CRUD, assign by email, duplicate assignment guard, member listing
-- Dashboard tests (8) — summary, trends, workload, member status, recent activity, tasks by project
+- Dashboard tests (8) — summary (week-filtered), trends, workload (week-filtered), member status (week-filtered), recent activity, tasks by project
