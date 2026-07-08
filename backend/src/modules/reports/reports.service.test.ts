@@ -47,7 +47,9 @@ describe("ReportsService", () => {
 
   describe("getMyReports", () => {
     it("should return user's reports", async () => {
-      vi.mocked(prisma.report.findMany).mockResolvedValue([mockReport]);
+      vi.mocked(prisma.report.findMany)
+        .mockResolvedValueOnce([]) // markLateReports — no late reports
+        .mockResolvedValueOnce([mockReport]); // actual query
 
       const result = await reportsService.getMyReports("user-1");
 
@@ -61,7 +63,9 @@ describe("ReportsService", () => {
     });
 
     it("should filter by projectId", async () => {
-      vi.mocked(prisma.report.findMany).mockResolvedValue([mockReport]);
+      vi.mocked(prisma.report.findMany)
+        .mockResolvedValueOnce([])
+        .mockResolvedValueOnce([mockReport]);
 
       const result = await reportsService.getMyReports("user-1", undefined, undefined, "proj-1");
 
@@ -73,7 +77,9 @@ describe("ReportsService", () => {
     });
 
     it("should paginate results", async () => {
-      vi.mocked(prisma.report.findMany).mockResolvedValue([]);
+      vi.mocked(prisma.report.findMany)
+        .mockResolvedValueOnce([])
+        .mockResolvedValueOnce([]);
 
       await reportsService.getMyReports("user-1", 2, 10);
 
@@ -202,7 +208,9 @@ describe("ReportsService", () => {
 
   describe("getAllReports", () => {
     it("should return all reports with filters", async () => {
-      vi.mocked(prisma.report.findMany).mockResolvedValue([mockReport, mockSubmittedReport]);
+      vi.mocked(prisma.report.findMany)
+        .mockResolvedValueOnce([])
+        .mockResolvedValueOnce([mockReport, mockSubmittedReport]);
 
       const result = await reportsService.getAllReports({
         projectId: "proj-1",
@@ -225,6 +233,8 @@ describe("ReportsService", () => {
 
   describe("getReportById", () => {
     it("should return a report by id", async () => {
+      vi.mocked(prisma.report.findMany)
+        .mockResolvedValueOnce([]);
       vi.mocked(prisma.report.findUnique).mockResolvedValue(mockReport);
 
       const result = await reportsService.getReportById("report-1");
@@ -240,6 +250,8 @@ describe("ReportsService", () => {
     });
 
     it("should return null when not found", async () => {
+      vi.mocked(prisma.report.findMany)
+        .mockResolvedValueOnce([]);
       vi.mocked(prisma.report.findUnique).mockResolvedValue(null);
 
       const result = await reportsService.getReportById("nonexistent");

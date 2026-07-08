@@ -3,10 +3,11 @@
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { useAuth } from "@/hooks/useAuth"
+import { useTheme } from "@/hooks/useTheme"
 import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import {
-  LayoutDashboard, FileText, FolderKanban, LogOut, Menu, X,
+  LayoutDashboard, FileText, FolderKanban, LogOut, Menu, X, Sun, Moon,
 } from "lucide-react"
 import { useState } from "react"
 import { cn } from "@/lib/utils"
@@ -24,6 +25,7 @@ const memberLinks = [
 
 export function Sidebar() {
   const { user, logout } = useAuth()
+  const { theme, toggle } = useTheme()
   const pathname = usePathname()
   const [mobileOpen, setMobileOpen] = useState(false)
 
@@ -67,7 +69,11 @@ export function Sidebar() {
         })}
       </nav>
 
-      <div className="border-t px-4 py-4">
+      <div className="border-t px-4 py-4 space-y-3">
+        <Button variant="ghost" size="sm" className="w-full justify-start gap-3 text-muted-foreground" onClick={toggle}>
+          {theme === "light" ? <Moon className="h-4 w-4" /> : <Sun className="h-4 w-4" />}
+          {theme === "light" ? "Dark mode" : "Light mode"}
+        </Button>
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <Avatar className="h-8 w-8">

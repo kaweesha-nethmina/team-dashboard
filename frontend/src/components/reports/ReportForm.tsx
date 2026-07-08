@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { ItemList } from "@/components/ui/item-list"
 import { api } from "@/lib/api"
+import { toast } from "sonner"
 import type { Project } from "@/types"
 
 function splitItems(val?: string): string[] {
@@ -48,14 +49,18 @@ export function ReportForm({ projects, initialData, onSuccess }: {
       }
       if (initialData?.id) {
         await api.reports.update(initialData.id, payload)
+        toast.success("Report updated")
       } else {
         await api.reports.create(payload)
+        toast.success("Report created")
       }
       onSuccess?.()
       router.push("/my-reports")
       router.refresh()
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : "Failed to save report")
+      const msg = err instanceof Error ? err.message : "Failed to save report"
+      setError(msg)
+      toast.error(msg)
     } finally {
       setLoading(false)
     }

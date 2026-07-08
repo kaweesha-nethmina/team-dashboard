@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
+import { motion } from "framer-motion"
 import { useAuth } from "@/hooks/useAuth"
 import { api } from "@/lib/api"
 import { SummaryCards } from "@/components/dashboard/SummaryCards"
@@ -11,6 +12,7 @@ import { WorkloadChart } from "@/components/dashboard/WorkloadChart"
 import { AIChatWidget } from "@/components/chat/AIChatWidget"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
+import { StatsCardSkeleton, DashboardChartSkeleton } from "@/components/ui/skeleton"
 import type { DashboardSummary, Trend, MemberStatus, Workload, RecentActivity } from "@/types"
 
 export default function DashboardPage() {
@@ -52,11 +54,30 @@ export default function DashboardPage() {
   }
 
   if (authLoading || loading) {
-    return <div className="flex justify-center py-12"><div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full" /></div>
+    return (
+      <div className="space-y-6">
+        <div>
+          <div className="h-9 w-36 bg-muted animate-pulse rounded" />
+          <div className="h-5 w-72 bg-muted animate-pulse rounded mt-1" />
+        </div>
+        <div className="grid gap-4 grid-cols-2 md:grid-cols-4">
+          {[1, 2, 3, 4].map((i) => <StatsCardSkeleton key={i} />)}
+        </div>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <DashboardChartSkeleton />
+          <DashboardChartSkeleton />
+        </div>
+      </div>
+    )
   }
 
   return (
-    <div className="space-y-6">
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.3 }}
+      className="space-y-6"
+    >
       <div>
         <h1 className="text-3xl font-bold">Dashboard</h1>
         <p className="text-muted-foreground">Team overview and performance metrics</p>
@@ -101,6 +122,6 @@ export default function DashboardPage() {
       )}
 
       <AIChatWidget />
-    </div>
+    </motion.div>
   )
 }

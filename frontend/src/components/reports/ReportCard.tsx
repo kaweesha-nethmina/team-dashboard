@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button"
 import { api } from "@/lib/api"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
+import { toast } from "sonner"
 import type { Report } from "@/types"
 
 const statusVariant: Record<string, "success" | "warning" | "secondary" | "outline" | "destructive"> = {
@@ -18,10 +19,11 @@ export function ReportCard({ report, onUpdate }: { report: Report; onUpdate?: ()
   const handleSubmit = async () => {
     try {
       await api.reports.submit(report.id)
+      toast.success("Report submitted successfully")
       onUpdate?.()
       router.refresh()
     } catch (err) {
-      console.error("Failed to submit report:", err)
+      toast.error(err instanceof Error ? err.message : "Failed to submit report")
     }
   }
 

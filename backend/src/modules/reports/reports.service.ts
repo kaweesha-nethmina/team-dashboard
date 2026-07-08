@@ -1,7 +1,22 @@
 import prisma from "../../config/prisma";
 
 export class ReportsService {
+  private async markLateReports(): Promise<void> {
+    const now = new Date();
+    const lateReports = await prisma.report.findMany({
+      where: { status: "DRAFT", weekEndDate: { lt: now } },
+      select: { id: true },
+    });
+    for (const r of lateReports) {
+      await prisma.report.update({
+        where: { id: r.id },
+        data: { status: "LATE" },
+      });
+    }
+  }
+
   async getMyReports(userId: string, page?: number, limit?: number, projectId?: string) {
+    await this.markLateReports();
     const take = limit || 50;
     const skip = page && page > 1 ? (page - 1) * take : 0;
     const where: any = { userId };
@@ -80,6 +95,7 @@ export class ReportsService {
     page?: number;
     limit?: number;
   }) {
+    await this.markLateReports();
     const where: any = {};
 
     if (filters.userId) where.userId = filters.userId;
@@ -104,6 +120,7 @@ export class ReportsService {
   }
 
   async getReportById(reportId: string) {
+    await this.markLateReports();
     return prisma.report.findUnique({
       where: { id: reportId },
       include: {
@@ -114,6 +131,7 @@ export class ReportsService {
   }
 
   async getSubmissionStatus() {
+    await this.markLateReports();
     const users = await prisma.user.findMany({
       where: { role: "MEMBER" },
       select: {

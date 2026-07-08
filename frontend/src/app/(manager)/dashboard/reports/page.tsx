@@ -9,7 +9,7 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { X, Search } from "lucide-react"
+import { X, Search, Download } from "lucide-react"
 import type { Report, Project } from "@/types"
 
 const STATUSES = ["", "DRAFT", "SUBMITTED", "LATE"] as const
@@ -119,6 +119,30 @@ export default function TeamReportsPage() {
 
   const hasFilters = statusFilter || projectFilter || startDate || endDate || selectedMember
 
+  const exportCSV = () => {
+    const headers = "Member,Project,Week Start,Week End,Hours,Status,Submitted\n"
+    const rows = reports.map((r) => {
+      return [
+        r.user?.name || "",
+        r.project.name,
+        new Date(r.weekStartDate).toLocaleDateString(),
+        new Date(r.weekEndDate).toLocaleDateString(),
+        r.hoursWorked?.toString() || "0",
+        r.status,
+        r.submittedAt ? new Date(r.submittedAt).toLocaleDateString() : "-",
+      ].join(",")
+    }).join("\n")
+
+    const csv = `\uFEFF${headers}${rows}`
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement("a")
+    a.href = url
+    a.download = `team-reports-${new Date().toISOString().slice(0, 10)}.csv`
+    a.click()
+    URL.revokeObjectURL(url)
+  }
+
   if (authLoading) {
     return <div className="flex justify-center py-12"><div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full" /></div>
   }
@@ -195,6 +219,11 @@ export default function TeamReportsPage() {
         {hasFilters && (
           <Button variant="ghost" size="sm" onClick={clearFilters}>
             <X className="h-4 w-4 mr-1" /> Clear
+          </Button>
+        )}
+        {reports.length > 0 && (
+          <Button variant="outline" size="sm" onClick={exportCSV} className="ml-auto">
+            <Download className="h-4 w-4 mr-1" /> Export CSV
           </Button>
         )}
       </div>

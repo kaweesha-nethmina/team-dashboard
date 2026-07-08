@@ -3,12 +3,23 @@
 import { useState, useEffect } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
+import { motion } from "framer-motion"
 import { useAuth } from "@/hooks/useAuth"
 import { api } from "@/lib/api"
 import { ReportCard } from "@/components/reports/ReportCard"
 import { Button } from "@/components/ui/button"
-import { Plus } from "lucide-react"
+import { CardSkeleton } from "@/components/ui/skeleton"
+import { Plus, ChevronDown } from "lucide-react"
 import type { Report } from "@/types"
+
+function formatWeekLabel(startDate: string): string {
+  const d = new Date(startDate)
+  const now = new Date()
+  const diffDays = Math.floor((now.getTime() - d.getTime()) / (1000 * 60 * 60 * 24))
+  if (diffDays < 7) return "This Week"
+  if (diffDays < 14) return "Last Week"
+  return `Week of ${d.toLocaleDateString("en-US", { month: "short", day: "numeric" })}`
+}
 
 export default function MyReportsPage() {
   const { user, loading: authLoading } = useAuth()
@@ -34,12 +45,38 @@ export default function MyReportsPage() {
     }
   }
 
+  const grouped = reports.reduce<Record<string, Report[]>>((acc, r) => {
+    const weekKey = r.weekStartDate.slice(0, 10)
+    if (!acc[weekKey]) acc[weekKey] = []
+    acc[weekKey].push(r)
+    return acc
+  }, {})
+
+  const weekKeys = Object.keys(grouped).sort().reverse()
+
   if (authLoading || loading) {
-    return <div className="flex justify-center py-12"><div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full" /></div>
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <div className="h-9 w-40 bg-muted animate-pulse rounded" />
+            <div className="h-5 w-64 bg-muted animate-pulse rounded mt-1" />
+          </div>
+        </div>
+        <div className="grid gap-4">
+          {[1, 2, 3].map((i) => <CardSkeleton key={i} />)}
+        </div>
+      </div>
+    )
   }
 
   return (
-    <div className="space-y-6">
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.3 }}
+      className="space-y-6"
+    >
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold">My Reports</h1>
@@ -50,8 +87,30 @@ export default function MyReportsPage() {
       {reports.length === 0 ? (
         <p className="text-center text-muted-foreground py-12">No reports yet. Create your first one!</p>
       ) : (
-        <div className="grid gap-4">{reports.map((r) => <ReportCard key={r.id} report={r} onUpdate={loadReports} />)}</div>
+        <div className="space-y-8">
+          {weekKeys.map((weekKey) => (
+            <div key={weekKey}>
+              <div className="flex items-center gap-2 mb-3">
+                <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                <h2 className="text-lg font-semibold">{formatWeekLabel(weekKey)}</h2>
+                <span className="text-xs text-muted-foreground">({grouped[weekKey].length} report{grouped[weekKey].length > 1 ? "s" : ""})</span>
+              </div>
+              <div className="grid gap-4">
+                {grouped[weekKey].map((r, i) => (
+                  <motion.div
+                    key={r.id}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.3, delay: i * 0.05 }}
+                  >
+                    <ReportCard report={r} onUpdate={loadReports} />
+                  </motion.div>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
       )}
-    </div>
+    </motion.div>
   )
 }
