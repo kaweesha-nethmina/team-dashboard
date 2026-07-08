@@ -1,5 +1,6 @@
 "use client"
 
+import { useRouter } from "next/navigation"
 import { Badge } from "@/components/ui/badge"
 import type { Report } from "@/types"
 
@@ -11,6 +12,8 @@ export function ReportTable({ reports, showUser = false }: {
   reports: Report[]
   showUser?: boolean
 }) {
+  const router = useRouter()
+
   return (
     <div className="overflow-x-auto">
       <table className="w-full text-sm">
@@ -26,7 +29,11 @@ export function ReportTable({ reports, showUser = false }: {
         </thead>
         <tbody>
           {reports.map((report) => (
-            <tr key={report.id} className="border-b hover:bg-muted/50">
+            <tr
+              key={report.id}
+              className="border-b hover:bg-muted/50 cursor-pointer"
+              onClick={() => router.push(`/reports/${report.id}`)}
+            >
               {showUser && <td className="py-3 px-4">{report.user?.name}</td>}
               <td className="py-3 px-4">{report.project.name}</td>
               <td className="py-3 px-4 whitespace-nowrap">

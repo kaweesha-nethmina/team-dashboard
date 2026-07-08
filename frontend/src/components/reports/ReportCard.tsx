@@ -54,11 +54,17 @@ export function ReportCard({ report, onUpdate }: { report: Report; onUpdate?: ()
             <p className="text-sm whitespace-pre-wrap">{report.blockers}</p>
           </div>
         )}
-        {report.status === "DRAFT" && (
+        {report.status === "DRAFT" ? (
           <div className="flex gap-2 pt-2">
             <Button size="sm" onClick={handleSubmit}>Submit</Button>
             <Link href={`/my-reports/${report.id}/edit`}>
               <Button size="sm" variant="outline">Edit</Button>
+            </Link>
+          </div>
+        ) : (
+          <div className="pt-2">
+            <Link href={`/reports/${report.id}`}>
+              <Button size="sm" variant="outline">View details</Button>
             </Link>
           </div>
         )}

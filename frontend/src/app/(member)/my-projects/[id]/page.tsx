@@ -108,7 +108,7 @@ export default function MemberProjectDetailPage() {
           ) : (
             <div className="space-y-3">
               {reports.map((r) => (
-                <Link key={r.id} href={`/my-reports/${r.id}/edit`}>
+                <Link key={r.id} href={r.status === "DRAFT" ? `/my-reports/${r.id}/edit` : `/reports/${r.id}`}>
                   <div className="flex items-center justify-between rounded-lg border px-4 py-3 hover:bg-muted/50 transition-colors">
                     <div className="flex items-center gap-3">
                       <Calendar className="h-4 w-4 text-muted-foreground" />
@@ -123,9 +123,9 @@ export default function MemberProjectDetailPage() {
                       <Badge variant={r.status === "SUBMITTED" ? "success" : "warning"} className="text-xs">
                         {r.status === "SUBMITTED" ? "Submitted" : "Draft"}
                       </Badge>
-                      {r.status === "DRAFT" && (
-                        <span className="text-xs text-muted-foreground">Click to edit</span>
-                      )}
+                      <span className="text-xs text-muted-foreground">
+                        {r.status === "SUBMITTED" ? "Click to view" : "Click to edit"}
+                      </span>
                     </div>
                   </div>
                 </Link>
